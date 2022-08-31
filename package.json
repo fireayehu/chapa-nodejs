@@ -1,5 +1,5 @@
 {
-  "version": "0.1.0",
+  "version": "1.0.0",
   "license": "MIT",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -31,8 +31,8 @@
     "singleQuote": true,
     "trailingComma": "es5"
   },
-  "name": "chapa",
-  "author": "Fireayehu Zekarias",
+  "name": "chapa-nodejs",
+  "author": "Fireayehu Zekarias<fireayehuzekarias@gmail.com>",
   "module": "dist/chapa.esm.js",
   "size-limit": [
     {
