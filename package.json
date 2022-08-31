@@ -2,7 +2,7 @@
   "version": "1.0.0",
   "license": "MIT",
   "main": "dist/index.js",
-  "typings": "dist/index.d.ts",
+  "url": "https://github.com/fireayehu/chapa-nodejs#readme",
   "files": [
     "dist",
     "src"
@@ -34,6 +34,19 @@
   "name": "chapa-nodejs",
   "author": "Fireayehu Zekarias<fireayehuzekarias@gmail.com>",
   "module": "dist/chapa.esm.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/fireayehu/chapa-nodejs"
+  },
+  "keywords": [
+    "nodejs",
+    "node",
+    "javascript",
+    "typescript",
+    "chapa",
+    "chapa-nodejs",
+    "payment"
+  ],
   "size-limit": [
     {
       "path": "dist/chapa.cjs.production.min.js",
