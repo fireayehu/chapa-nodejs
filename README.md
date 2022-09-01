@@ -146,4 +146,4 @@ interface VerifyResponse {
 
 ## License
 
-chapa-nodejs `MIT` License is Pending
+chapa-nodejs is [MIT licensed](LICENSE).
