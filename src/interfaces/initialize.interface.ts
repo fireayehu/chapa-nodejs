@@ -6,8 +6,11 @@ export interface InitializeOptions {
   amount: string;
   tx_ref: string;
   callback_url?: string;
-  'customization[title]'?: string;
-  'customization[description]'?: string;
+  customization?: {
+    title?: string;
+    description?: string;
+    logo?: string;
+  };
 }
 
 export interface InitializeResponse {
