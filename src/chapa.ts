@@ -1,15 +1,20 @@
 import axios from 'axios';
-import { ChapaUrls } from './enums/chapa-urls.enum';
+import { customAlphabet } from 'nanoid/async';
+import { alphanumeric } from 'nanoid-dictionary';
+import { ChapaUrls } from './enums';
 import { HttpException } from './http-exception';
 import {
   ChapaOptions,
+  GenerateTransactionReferenceOptions,
   InitializeOptions,
   InitializeResponse,
   VerifyOptions,
   VerifyResponse,
 } from './interfaces';
-import { validateInitializeOptions } from './validations/initialize.validation';
-import { validateVerifyOptions } from './validations/verify.validation';
+import {
+  validateInitializeOptions,
+  validateVerifyOptions,
+} from './validations';
 
 interface IChapa {
   initialize(initializeOptions: InitializeOptions): Promise<InitializeResponse>;
@@ -71,5 +76,23 @@ export class Chapa implements IChapa {
         throw error;
       }
     }
+  }
+
+  async generateTransactionReference(
+    generateTransactionReferenceOptions?: GenerateTransactionReferenceOptions
+  ): Promise<string> {
+    const prefix =
+      generateTransactionReferenceOptions &&
+      generateTransactionReferenceOptions.prefix
+        ? generateTransactionReferenceOptions.prefix
+        : 'tx';
+    const size =
+      generateTransactionReferenceOptions &&
+      generateTransactionReferenceOptions.size
+        ? generateTransactionReferenceOptions.size
+        : 15;
+    const nanoid = customAlphabet(alphanumeric, size);
+    const reference = await nanoid();
+    return `${prefix}-${reference}`;
   }
 }

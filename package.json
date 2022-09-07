@@ -67,6 +67,8 @@
   },
   "dependencies": {
     "axios": "^0.27.2",
+    "nanoid": "^3.0.0",
+    "nanoid-dictionary": "^4.3.0",
     "yup": "^0.32.11"
   }
 }
