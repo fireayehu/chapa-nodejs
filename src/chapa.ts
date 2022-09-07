@@ -5,6 +5,8 @@ import { ChapaUrls } from './enums';
 import { HttpException } from './http-exception';
 import {
   ChapaOptions,
+  CreateSubaccountOptions,
+  CreateSubaccountResponse,
   GenerateTransactionReferenceOptions,
   GetBanksResponse,
   InitializeOptions,
@@ -13,6 +15,7 @@ import {
   VerifyResponse,
 } from './interfaces';
 import {
+  validateCreateSubaccountOptions,
   validateInitializeOptions,
   validateVerifyOptions,
 } from './validations';
@@ -24,6 +27,9 @@ interface IChapa {
     generateTransactionReferenceOptions?: GenerateTransactionReferenceOptions
   ): Promise<string>;
   getBanks(): Promise<GetBanksResponse>;
+  createSubaccount(
+    createSubaccountOptions: CreateSubaccountOptions
+  ): Promise<CreateSubaccountResponse>;
 }
 export class Chapa implements IChapa {
   constructor(private chapaOptions: ChapaOptions) {}
@@ -115,6 +121,35 @@ export class Chapa implements IChapa {
           error.response.data.message,
           error.response.status
         );
+      } else {
+        throw error;
+      }
+    }
+  }
+
+  async createSubaccount(
+    createSubaccountOptions: CreateSubaccountOptions
+  ): Promise<CreateSubaccountResponse> {
+    try {
+      await validateCreateSubaccountOptions(createSubaccountOptions);
+      const response = await axios.post<CreateSubaccountResponse>(
+        ChapaUrls.SUBACCOUNT,
+        createSubaccountOptions,
+        {
+          headers: {
+            Authorization: `Bearer ${this.chapaOptions.secretKey}`,
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      if (error.response) {
+        throw new HttpException(
+          error.response.data.message,
+          error.response.status
+        );
+      } else if (error.name === 'ValidationError') {
+        throw new HttpException(error.errors[0], 400);
       } else {
         throw error;
       }
