@@ -6,6 +6,7 @@ import { HttpException } from './http-exception';
 import {
   ChapaOptions,
   GenerateTransactionReferenceOptions,
+  GetBanksResponse,
   InitializeOptions,
   InitializeResponse,
   VerifyOptions,
@@ -19,6 +20,10 @@ import {
 interface IChapa {
   initialize(initializeOptions: InitializeOptions): Promise<InitializeResponse>;
   verify(VerifyOptions: VerifyOptions): Promise<VerifyResponse>;
+  generateTransactionReference(
+    generateTransactionReferenceOptions?: GenerateTransactionReferenceOptions
+  ): Promise<string>;
+  getBanks(): Promise<GetBanksResponse>;
 }
 export class Chapa implements IChapa {
   constructor(private chapaOptions: ChapaOptions) {}
@@ -94,5 +99,25 @@ export class Chapa implements IChapa {
     const nanoid = customAlphabet(alphanumeric, size);
     const reference = await nanoid();
     return `${prefix}-${reference}`;
+  }
+
+  async getBanks(): Promise<GetBanksResponse> {
+    try {
+      const banks = await axios.get<GetBanksResponse>(ChapaUrls.BANKS, {
+        headers: {
+          Authorization: `Bearer ${this.chapaOptions.secretKey}`,
+        },
+      });
+      return banks.data;
+    } catch (error) {
+      if (error.response) {
+        throw new HttpException(
+          error.response.data.message,
+          error.response.status
+        );
+      } else {
+        throw error;
+      }
+    }
   }
 }
