@@ -11,15 +11,12 @@ import {
   GetBanksResponse,
   InitializeOptions,
   InitializeResponse,
-  InitializeSplitPaymentOptions,
-  InitializeSplitPaymentResponse,
   VerifyOptions,
   VerifyResponse,
 } from './interfaces';
 import {
   validateCreateSubaccountOptions,
   validateInitializeOptions,
-  validateInitializeSplitPaymentOptions,
   validateVerifyOptions,
 } from './validations';
 
@@ -33,9 +30,6 @@ interface IChapa {
   createSubaccount(
     createSubaccountOptions: CreateSubaccountOptions
   ): Promise<CreateSubaccountResponse>;
-  initializeSplitPayment(
-    initializeSplitPaymentOptions: InitializeSplitPaymentOptions
-  ): Promise<InitializeSplitPaymentResponse>;
 }
 export class Chapa implements IChapa {
   constructor(private chapaOptions: ChapaOptions) {}
@@ -102,7 +96,7 @@ export class Chapa implements IChapa {
       generateTransactionReferenceOptions &&
       generateTransactionReferenceOptions.prefix
         ? generateTransactionReferenceOptions.prefix
-        : 'tx';
+        : 'TX';
     const size =
       generateTransactionReferenceOptions &&
       generateTransactionReferenceOptions.size
@@ -110,7 +104,7 @@ export class Chapa implements IChapa {
         : 15;
     const nanoid = customAlphabet(alphanumeric, size);
     const reference = await nanoid();
-    return `${prefix}-${reference}`;
+    return `${prefix}-${reference.toUpperCase()}`;
   }
 
   async getBanks(): Promise<GetBanksResponse> {
@@ -141,37 +135,6 @@ export class Chapa implements IChapa {
       const response = await axios.post<CreateSubaccountResponse>(
         ChapaUrls.SUBACCOUNT,
         createSubaccountOptions,
-        {
-          headers: {
-            Authorization: `Bearer ${this.chapaOptions.secretKey}`,
-          },
-        }
-      );
-      return response.data;
-    } catch (error) {
-      if (error.response) {
-        throw new HttpException(
-          error.response.data.message,
-          error.response.status
-        );
-      } else if (error.name === 'ValidationError') {
-        throw new HttpException(error.errors[0], 400);
-      } else {
-        throw error;
-      }
-    }
-  }
-  async initializeSplitPayment(
-    initializeSplitPaymentOptions: InitializeSplitPaymentOptions
-  ): Promise<InitializeSplitPaymentResponse> {
-    try {
-      await validateInitializeSplitPaymentOptions(
-        initializeSplitPaymentOptions
-      );
-
-      const response = await axios.post<InitializeSplitPaymentResponse>(
-        ChapaUrls.INITIALIZE,
-        initializeSplitPaymentOptions,
         {
           headers: {
             Authorization: `Bearer ${this.chapaOptions.secretKey}`,

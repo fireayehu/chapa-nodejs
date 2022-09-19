@@ -15,12 +15,24 @@ export const validateInitializeOptions = async (
       .string()
       .url()
       .optional(),
+    return_url: yup
+      .string()
+      .url()
+      .optional(),
     customization: yup
       .object()
       .shape({
         title: yup.string().optional(),
         description: yup.string().optional(),
         logo: yup.string().optional(),
+      })
+      .optional(),
+    subaccounts: yup
+      .object()
+      .shape({
+        id: yup.string().required(),
+        split_type: yup.string().optional(),
+        transaction_charge: yup.string().optional(),
       })
       .optional(),
   });
