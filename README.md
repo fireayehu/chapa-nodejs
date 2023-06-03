@@ -1,6 +1,6 @@
 <h1 align="center">
 <div align="center">
-  <a href="http://nestjs.com/" target="_blank">
+  <a href="https://chapa.co/" target="_blank">
     <img src="https://chapa.co/asset/images/logo_svg.svg" width="320" alt="Nest Logo"/>
   </a>
   <p align="center">NodeJS sdk for chapa</p>
