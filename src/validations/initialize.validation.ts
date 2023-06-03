@@ -28,12 +28,15 @@ export const validateInitializeOptions = async (
       })
       .optional(),
     subaccounts: yup
-      .object()
-      .shape({
-        id: yup.string().required(),
-        split_type: yup.string().optional(),
-        transaction_charge: yup.string().optional(),
-      })
+      .array()
+      .of(
+        yup.object().shape({
+          id: yup.string().required(),
+          split_type: yup.string().optional(),
+          transaction_charge: yup.string().optional(),
+        })
+      )
+      .nullable()
       .optional(),
   });
 

@@ -1,5 +1,5 @@
 {
-  "version": "1.2.0",
+  "version": "1.2.1",
   "license": "MIT",
   "main": "dist/index.js",
   "url": "https://github.com/fireayehu/chapa-nodejs#readme",
@@ -69,6 +69,6 @@
     "axios": "^0.27.2",
     "nanoid": "^3.0.0",
     "nanoid-dictionary": "^4.3.0",
-    "yup": "^0.32.11"
+    "yup": "^1.2.0"
   }
 }
