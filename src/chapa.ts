@@ -1,23 +1,34 @@
 import axios from 'axios';
 import { customAlphabet } from 'nanoid/async';
 import { alphanumeric } from 'nanoid-dictionary';
-import { ChapaUrls } from './enums';
+import {
+  ChapaUrls,
+  INITIALIZE_DIRECT_CHARGE,
+  AUTHERIZE_DIRECT_CHARGE,
+} from './enums';
 import { HttpException } from './http-exception';
 import {
   ChapaOptions,
   CreateSubaccountOptions,
   CreateSubaccountResponse,
+  DirectChargeBody,
+  DirectChargeResponse,
   GenerateTransactionReferenceOptions,
   GetBanksResponse,
   InitializeOptions,
   InitializeResponse,
   VerifyOptions,
   VerifyResponse,
+  DirectChargePaymentMethod,
+  VerifyDirectChargeParams,
+  VerifyDirectChargeResponse,
 } from './interfaces';
 import {
   validateCreateSubaccountOptions,
   validateInitializeOptions,
   validateVerifyOptions,
+  validateDirectChargeInitializeOptions,
+  validateDirectChargeVerifyOptions,
 } from './validations';
 
 interface IChapa {
@@ -96,6 +107,7 @@ export class Chapa implements IChapa {
       }
     }
   }
+
   async verify(verifyOptions: VerifyOptions): Promise<VerifyResponse> {
     try {
       await validateVerifyOptions(verifyOptions);
@@ -188,4 +200,82 @@ export class Chapa implements IChapa {
       }
     }
   }
+
+  async directChargeInitialize(
+    initializeOptions: DirectChargeBody,
+    { type }: DirectChargePaymentMethod
+  ): Promise<DirectChargeResponse> {
+    try {
+      await validateDirectChargeInitializeOptions(initializeOptions);
+
+      const response = await axios.post<DirectChargeResponse>(
+        INITIALIZE_DIRECT_CHARGE({ type }),
+        initializeOptions,
+        {
+          headers: {
+            Authorization: `Bearer ${this.chapaOptions.secretKey}`,
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      if (error.response) {
+        throw new HttpException(
+          error.response.data.message,
+          error.response.status
+        );
+      } else if (error.name === 'ValidationError') {
+        throw new HttpException(error.errors[0], 400);
+      } else {
+        throw error;
+      }
+    }
+  }
+
+  async autherizeDirectChargePayment(
+    options: VerifyDirectChargeParams
+  ): Promise<VerifyDirectChargeResponse> {
+    try {
+      await validateDirectChargeVerifyOptions(options);
+
+      const response = await axios.post<VerifyDirectChargeResponse>(
+        AUTHERIZE_DIRECT_CHARGE(options.payment_method),
+        {
+          reference: options.reference,
+          client: encrypt(options.encryptionKey, options.payload),
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${this.chapaOptions.secretKey}`,
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      if (error.response) {
+        throw new HttpException(
+          error.response.data.message,
+          error.response.status
+        );
+      } else if (error.name === 'ValidationError') {
+        throw new HttpException(error.errors[0], 400);
+      } else {
+        throw error;
+      }
+    }
+  }
+}
+
+function encrypt(encryptionKey: string, payload: any) {
+  const text = JSON.stringify(payload);
+  const forge = require('node-forge');
+  const cipher = forge.cipher.createCipher(
+    '3DES-ECB',
+    forge.util.createBuffer(encryptionKey)
+  );
+  cipher.start({ iv: '' });
+  cipher.update(forge.util.createBuffer(text, 'utf-8'));
+  cipher.finish();
+  const encrypted = cipher.output;
+  return forge.util.encode64(encrypted.getBytes());
 }
