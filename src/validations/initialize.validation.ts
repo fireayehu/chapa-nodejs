@@ -1,5 +1,9 @@
 import * as yup from 'yup';
-import { InitializeOptions } from '../interfaces/initialize.interface';
+import {
+  InitializeOptions,
+  DirectChargeBody,
+  VerifyDirectChargeParams,
+} from '../interfaces/initialize.interface';
 
 export const validateInitializeOptions = async (
   initializeOptions: InitializeOptions
@@ -41,4 +45,34 @@ export const validateInitializeOptions = async (
   });
 
   return await schema.validate(initializeOptions);
+};
+
+export const validateDirectChargeInitializeOptions = async (
+  initializeOptions: DirectChargeBody
+) => {
+  const schema = yup.object().shape({
+    first_name: yup.string().required(),
+    last_name: yup.string().required(),
+    email: yup.string().email(),
+    currency: yup.string().required(),
+    amount: yup.string().required(),
+    tx_ref: yup.string().required(),
+  });
+
+  return await schema.validate(initializeOptions);
+};
+
+export const validateDirectChargeVerifyOptions = async (
+  options: VerifyDirectChargeParams
+) => {
+  const schema = yup.object().shape({
+    client: yup.string().required(),
+    reference: yup.string().required(),
+    email: yup.string().email(),
+    currency: yup.string().required(),
+    amount: yup.string().required(),
+    tx_ref: yup.string().required(),
+  });
+
+  return await schema.validate(options);
 };
