@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { customAlphabet } from 'nanoid/async';
+import { customAlphabet } from 'nanoid';
 import { alphanumeric } from 'nanoid-dictionary';
 import { ChapaUrls } from './enums';
 import { HttpException } from './http-exception';
@@ -136,7 +136,7 @@ export class Chapa implements IChapa {
         ? generateTransactionReferenceOptions.size
         : 15;
     const nanoid = customAlphabet(alphanumeric, size);
-    const reference = await nanoid();
+    const reference = nanoid();
     return `${prefix}-${reference.toUpperCase()}`;
   }
 

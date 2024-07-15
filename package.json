@@ -19,7 +19,6 @@
     "size": "size-limit",
     "analyze": "size-limit --why"
   },
-  "peerDependencies": {},
   "husky": {
     "hooks": {
       "pre-commit": "tsdx lint"
@@ -57,18 +56,19 @@
       "limit": "10 KB"
     }
   ],
-  "devDependencies": {
-    "@size-limit/preset-small-lib": "^8.0.1",
-    "husky": "^8.0.1",
-    "size-limit": "^8.0.1",
-    "tsdx": "^0.14.1",
-    "tslib": "^2.4.0",
-    "typescript": "^4.8.2"
-  },
   "dependencies": {
-    "axios": "^0.27.2",
-    "nanoid": "^3.0.0",
+    "axios": "^1.7.2",
+    "nanoid": "^5.0.7",
     "nanoid-dictionary": "^4.3.0",
-    "yup": "^1.2.0"
+    "yup": "^1.4.0"
+  },
+  "devDependencies": {
+    "@size-limit/preset-small-lib": "^11.1.4",
+    "@types/nanoid-dictionary": "^4.2.3",
+    "husky": "^9.0.11",
+    "size-limit": "^11.1.4",
+    "tsdx": "^0.14.1",
+    "tslib": "^2.6.3",
+    "typescript": "^5.5.3"
   }
 }
