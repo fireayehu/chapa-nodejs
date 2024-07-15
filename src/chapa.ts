@@ -7,7 +7,7 @@ import {
   ChapaOptions,
   CreateSubaccountOptions,
   CreateSubaccountResponse,
-  GenerateTransactionReferenceOptions,
+  GenTxRefOptions,
   GetBanksResponse,
   InitializeOptions,
   InitializeResponse,
@@ -26,9 +26,7 @@ interface IChapa {
     initializeOptions: InitializeOptions
   ): Promise<InitializeResponse>;
   verify(VerifyOptions: VerifyOptions): Promise<VerifyResponse>;
-  generateTransactionReference(
-    generateTransactionReferenceOptions?: GenerateTransactionReferenceOptions
-  ): Promise<string>;
+  genTxRef(genTxRefOptions?: GenTxRefOptions): Promise<string>;
   getBanks(): Promise<GetBanksResponse>;
   createSubaccount(
     createSubaccountOptions: CreateSubaccountOptions
@@ -122,21 +120,16 @@ export class Chapa implements IChapa {
     }
   }
 
-  async generateTransactionReference(
-    generateTransactionReferenceOptions?: GenerateTransactionReferenceOptions
-  ): Promise<string> {
-    const prefix =
-      generateTransactionReferenceOptions &&
-      generateTransactionReferenceOptions.prefix
-        ? generateTransactionReferenceOptions.prefix
-        : 'TX';
-    const size =
-      generateTransactionReferenceOptions &&
-      generateTransactionReferenceOptions.size
-        ? generateTransactionReferenceOptions.size
-        : 15;
+  async genTxRef(genTxRefOptions?: GenTxRefOptions): Promise<string> {
+    const { removePrefix = false, prefix = 'TX', size = 15 } =
+      genTxRefOptions || {};
+
     const nanoid = customAlphabet(alphanumeric, size);
     const reference = nanoid();
+
+    if (removePrefix) {
+      return reference.toUpperCase();
+    }
     return `${prefix}-${reference.toUpperCase()}`;
   }
 

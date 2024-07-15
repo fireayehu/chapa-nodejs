@@ -22,13 +22,19 @@
 **NPM**
 
 ```bash
-$ npm i -s chapa-nodejs
+$ npm install chapa-nodejs
 ```
 
 **Yarn**
 
 ```bash
 $ yarn add chapa-nodejs
+```
+
+**Pnpm**
+
+```bash
+$ pnpm add chapa-nodejs
 ```
 
 ## Getting started
@@ -38,6 +44,8 @@ Once the installation process is complete, we can import the sdk in any file.
 &nbsp;
 
 ### Configuration
+
+Keep in mind to load your secret key from environment variable
 
 ```typescript
 import { Chapa } from 'chapa-nodejs';
@@ -54,11 +62,12 @@ const chapa = new Chapa({
 This utility method of `Chapa` instance allows you to generating a customizable random alpha numberic transaction reference.
 
 ```typescript
-const tx_ref = await chapa.generateTransactionReference(); // result: TX-JHBUVLM7HYMSWDA
+const tx_ref = await chapa.genTxRef(); // result: TX-JHBUVLM7HYMSWDA
 
 // Or with options
 
-const tx_ref = await chapa.generateTransactionReference({
+const tx_ref = await chapa.genTxRef({
+  removePrefix: false // defaults to `false`
   prefix: 'TX', // defaults to `TX`
   size: 20, // defaults to `15`
 });
@@ -70,12 +79,13 @@ To initialize a transaction, we have two possilbe ways. The first one is for web
 
 ```typescript
 // Generate transaction reference using our utility method or provide your own
-const tx_ref = await chapa.generateTransactionReference();
+const tx_ref = await chapa.genTxRef();
 
 const response = await chapa.initialize({
   first_name: 'John',
   last_name: 'Doe',
   email: 'john@gmail.com',
+  phone_number: '0911121314',
   currency: 'ETB',
   amount: '200',
   tx_ref: tx_ref,
@@ -90,12 +100,13 @@ const response = await chapa.initialize({
 
 ```typescript
 // Generate transaction reference using our utility method or provide your own
-const tx_ref = await chapa.generateTransactionReference();
+const tx_ref = await chapa.genTxRef();
 
 const response = await chapa.mobileInitialize({
   first_name: 'John',
   last_name: 'Doe',
   email: 'john@gmail.com',
+  phone_number: '0911121314',
   currency: 'ETB',
   amount: '200',
   tx_ref: tx_ref,
@@ -119,13 +130,14 @@ enum SplitType {
 interface Subaccount {
   id: string;
   split_type?: SplitType;
-  transaction_charge?: number;
+  split_value?: number;
 }
 
 interface InitializeOptions {
-  first_name: string;
-  last_name: string;
-  email: string;
+  first_name?: string;
+  last_name?: string;
+  email?: string;
+  phone_number?: string;
   currency: string;
   amount: string;
   tx_ref: string;
@@ -180,6 +192,7 @@ interface VerifyResponse {
     first_name: string;
     last_name: string;
     email: string;
+    phone_number: string;
     currency: string;
     amount: string;
     charge: string;
@@ -277,12 +290,13 @@ Split payments are carried out by first creating a subaccount, then initializing
 
 ```typescript
 // Generate transaction reference using our utility method or provide your own
-const tx_ref = await chapa.generateTransactionReference();
+const tx_ref = await chapa.genTxRef();
 
 const response = chapa.initialize({
   first_name: 'John',
   last_name: 'Doe',
   email: 'john@gmail.com',
+  phone_number: '0911121314',
   currency: 'ETB',
   amount: '200',
   tx_ref: tx_ref,
@@ -310,7 +324,7 @@ When collecting a payment, you can override the default `split_type` and `split_
     {
       id: '80a510ea-7497-4499-8b49-ac13a3ab7d07',
       split_type: SplitType.FLAT,
-      transaction_charge: 25
+      split_value: 25
     },
   ],
 ```
