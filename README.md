@@ -67,7 +67,7 @@ const tx_ref = await chapa.genTxRef(); // result: TX-JHBUVLM7HYMSWDA
 // Or with options
 
 const tx_ref = await chapa.genTxRef({
-  removePrefix: false // defaults to `false`
+  removePrefix: false, // defaults to `false`
   prefix: 'TX', // defaults to `TX`
   size: 20, // defaults to `15`
 });
