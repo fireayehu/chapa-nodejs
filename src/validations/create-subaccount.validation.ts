@@ -8,7 +8,7 @@ export const validateCreateSubaccountOptions = async (
   const schema = yup.object().shape({
     business_name: yup.string().required(),
     account_name: yup.string().required(),
-    bank_code: yup.string().required(),
+    bank_code: yup.number().required(),
     account_number: yup.string().required(),
     split_type: yup
       .mixed()
