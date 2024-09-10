@@ -230,7 +230,7 @@ const response = await chapa.getBanks();
 type Currency = 'ETB' | 'USD';
 
 interface Data {
-  id: string;
+  id: number;
   swift: string;
   name: string;
   acct_length: number;
@@ -355,7 +355,7 @@ const response = await chapa.createSubaccount({
 interface CreateSubaccountOptions {
   business_name: string;
   account_name: string;
-  bank_code: string;
+  bank_code: number;
   account_number: string;
   split_type: SplitType;
   split_value: number;

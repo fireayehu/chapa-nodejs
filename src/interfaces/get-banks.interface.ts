@@ -1,7 +1,7 @@
 type Currency = 'ETB' | 'USD';
 
 interface Data {
-  id: string;
+  id: number;
   swift: string;
   name: string;
   acct_length: number;
