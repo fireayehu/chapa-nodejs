@@ -3,7 +3,7 @@
   <a href="https://chapa.co/" target="_blank">
     <img src="./docs/logo.png" width="320" alt="Nest Logo"/>
   </a>
-  <p align="center">NodeJS sdk for chapa</p>
+  <p align="center">NodeJS SDK for chapa</p>
 </div>
 </h1>
 
