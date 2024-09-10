@@ -9,6 +9,9 @@ import {
   CreateSubaccountResponse,
   GenTxRefOptions,
   GetBanksResponse,
+  GetTransactionLogsOptions,
+  GetTransactionLogsResponse,
+  GetTransactionsResponse,
   InitializeOptions,
   InitializeResponse,
   VerifyOptions,
@@ -19,31 +22,33 @@ import {
   validateInitializeOptions,
   validateVerifyOptions,
 } from './validations';
+import { validateGetTransactionLogsOptions } from './validations/transaction.validation';
 
 interface IChapa {
-  initialize(initializeOptions: InitializeOptions): Promise<InitializeResponse>;
-  mobileInitialize(
-    initializeOptions: InitializeOptions
-  ): Promise<InitializeResponse>;
-  verify(VerifyOptions: VerifyOptions): Promise<VerifyResponse>;
+  initialize(options: InitializeOptions): Promise<InitializeResponse>;
+  mobileInitialize(options: InitializeOptions): Promise<InitializeResponse>;
+  verify(options: VerifyOptions): Promise<VerifyResponse>;
   genTxRef(genTxRefOptions?: GenTxRefOptions): Promise<string>;
   getBanks(): Promise<GetBanksResponse>;
   createSubaccount(
-    createSubaccountOptions: CreateSubaccountOptions
+    options: CreateSubaccountOptions
   ): Promise<CreateSubaccountResponse>;
+  getTransactions(): Promise<GetTransactionsResponse>;
+  getTransactionLogs(
+    options: GetTransactionLogsOptions
+  ): Promise<GetTransactionLogsResponse>;
 }
+
 export class Chapa implements IChapa {
   constructor(private chapaOptions: ChapaOptions) {}
 
-  async initialize(
-    initializeOptions: InitializeOptions
-  ): Promise<InitializeResponse> {
+  async initialize(options: InitializeOptions): Promise<InitializeResponse> {
     try {
-      await validateInitializeOptions(initializeOptions);
+      await validateInitializeOptions(options);
 
       const response = await axios.post<InitializeResponse>(
         ChapaUrls.INITIALIZE,
-        initializeOptions,
+        options,
         {
           headers: {
             Authorization: `Bearer ${this.chapaOptions.secretKey}`,
@@ -66,39 +71,14 @@ export class Chapa implements IChapa {
   }
 
   async mobileInitialize(
-    initializeOptions: InitializeOptions
+    options: InitializeOptions
   ): Promise<InitializeResponse> {
     try {
-      await validateInitializeOptions(initializeOptions);
+      await validateInitializeOptions(options);
 
       const response = await axios.post<InitializeResponse>(
         ChapaUrls.MOBILE_INITIALIZE,
-        initializeOptions,
-        {
-          headers: {
-            Authorization: `Bearer ${this.chapaOptions.secretKey}`,
-          },
-        }
-      );
-      return response.data;
-    } catch (error) {
-      if (error.response) {
-        throw new HttpException(
-          error.response.data.message,
-          error.response.status
-        );
-      } else if (error.name === 'ValidationError') {
-        throw new HttpException(error.errors[0], 400);
-      } else {
-        throw error;
-      }
-    }
-  }
-  async verify(verifyOptions: VerifyOptions): Promise<VerifyResponse> {
-    try {
-      await validateVerifyOptions(verifyOptions);
-      const response = await axios.get<VerifyResponse>(
-        `${ChapaUrls.VERIFY}/${verifyOptions.tx_ref}`,
+        options,
         {
           headers: {
             Authorization: `Bearer ${this.chapaOptions.secretKey}`,
@@ -120,9 +100,34 @@ export class Chapa implements IChapa {
     }
   }
 
-  async genTxRef(genTxRefOptions?: GenTxRefOptions): Promise<string> {
-    const { removePrefix = false, prefix = 'TX', size = 15 } =
-      genTxRefOptions || {};
+  async verify(options: VerifyOptions): Promise<VerifyResponse> {
+    try {
+      await validateVerifyOptions(options);
+      const response = await axios.get<VerifyResponse>(
+        `${ChapaUrls.VERIFY}/${options.tx_ref}`,
+        {
+          headers: {
+            Authorization: `Bearer ${this.chapaOptions.secretKey}`,
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      if (error.response) {
+        throw new HttpException(
+          error.response.data.message,
+          error.response.status
+        );
+      } else if (error.name === 'ValidationError') {
+        throw new HttpException(error.errors[0], 400);
+      } else {
+        throw error;
+      }
+    }
+  }
+
+  async genTxRef(options?: GenTxRefOptions): Promise<string> {
+    const { removePrefix = false, prefix = 'TX', size = 15 } = options || {};
 
     const nanoid = customAlphabet(alphanumeric, size);
     const reference = nanoid();
@@ -154,13 +159,64 @@ export class Chapa implements IChapa {
   }
 
   async createSubaccount(
-    createSubaccountOptions: CreateSubaccountOptions
+    options: CreateSubaccountOptions
   ): Promise<CreateSubaccountResponse> {
     try {
-      await validateCreateSubaccountOptions(createSubaccountOptions);
+      await validateCreateSubaccountOptions(options);
       const response = await axios.post<CreateSubaccountResponse>(
         ChapaUrls.SUBACCOUNT,
-        createSubaccountOptions,
+        options,
+        {
+          headers: {
+            Authorization: `Bearer ${this.chapaOptions.secretKey}`,
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      if (error.response) {
+        throw new HttpException(
+          error.response.data.message,
+          error.response.status
+        );
+      } else if (error.name === 'ValidationError') {
+        throw new HttpException(error.errors[0], 400);
+      } else {
+        throw error;
+      }
+    }
+  }
+
+  async getTransactions(): Promise<GetTransactionsResponse> {
+    try {
+      const response = await axios.get<GetTransactionsResponse>(
+        ChapaUrls.TRANSACTIONS,
+        {
+          headers: {
+            Authorization: `Bearer ${this.chapaOptions.secretKey}`,
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      if (error.response) {
+        throw new HttpException(
+          error.response.data.message,
+          error.response.status
+        );
+      } else {
+        throw error;
+      }
+    }
+  }
+
+  async getTransactionLogs(
+    options: GetTransactionLogsOptions
+  ): Promise<GetTransactionLogsResponse> {
+    try {
+      await validateGetTransactionLogsOptions(options);
+      const response = await axios.get<GetTransactionLogsResponse>(
+        `${ChapaUrls.TRANSACTIONS_LOGS}/${options.ref_id}`,
         {
           headers: {
             Authorization: `Bearer ${this.chapaOptions.secretKey}`,
