@@ -4,11 +4,15 @@ import { alphanumeric } from 'nanoid-dictionary';
 import { ChapaUrls } from './enums';
 import { HttpException } from './http-exception';
 import {
+  AuthorizeDirectChargeOptions,
+  AuthorizeDirectChargeResponse,
   BulkTransferOptions,
   BulkTransferResponse,
   ChapaOptions,
   CreateSubaccountOptions,
   CreateSubaccountResponse,
+  DirectChargeOptions,
+  DirectChargeResponse,
   GenTxRefOptions,
   GetBanksResponse,
   GetTransactionLogsOptions,
@@ -25,8 +29,10 @@ import {
   VerifyTransferResponse,
 } from './interfaces';
 import {
+  validateAuthorizeDirectChargeOptions,
   validateBulkTransferOptions,
   validateCreateSubaccountOptions,
+  validateDirectChargeOptions,
   validateGetTransactionLogsOptions,
   validateInitializeOptions,
   validateTransferOptions,
@@ -52,6 +58,10 @@ interface IChapa {
     options: VerifyTransferOptions
   ): Promise<VerifyTransferResponse>;
   getTransfers(): Promise<GetTransfersResponse>;
+  directCharge(options: DirectChargeOptions): Promise<DirectChargeResponse>;
+  authorizeDirectCharge(
+    options: AuthorizeDirectChargeOptions
+  ): Promise<AuthorizeDirectChargeResponse>;
 }
 
 export class Chapa implements IChapa {
@@ -356,6 +366,72 @@ export class Chapa implements IChapa {
           error.response.data.message,
           error.response.status
         );
+      } else {
+        throw error;
+      }
+    }
+  }
+
+  async directCharge(
+    options: DirectChargeOptions
+  ): Promise<DirectChargeResponse> {
+    try {
+      await validateDirectChargeOptions(options);
+
+      const response = await axios.post<DirectChargeResponse>(
+        ChapaUrls.DIRECT_CHARGE,
+        options,
+        {
+          params: {
+            type: options.type,
+          },
+          headers: {
+            Authorization: `Bearer ${this.chapaOptions.secretKey}`,
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      if (error.response) {
+        throw new HttpException(
+          error.response.data.message,
+          error.response.status
+        );
+      } else if (error.name === 'ValidationError') {
+        throw new HttpException(error.errors[0], 400);
+      } else {
+        throw error;
+      }
+    }
+  }
+
+  async authorizeDirectCharge(
+    options: AuthorizeDirectChargeOptions
+  ): Promise<AuthorizeDirectChargeResponse> {
+    try {
+      await validateAuthorizeDirectChargeOptions(options);
+
+      const response = await axios.post<AuthorizeDirectChargeResponse>(
+        ChapaUrls.AUTHORIZE_DIRECT_CHARGE,
+        options,
+        {
+          params: {
+            type: options.type,
+          },
+          headers: {
+            Authorization: `Bearer ${this.chapaOptions.secretKey}`,
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      if (error.response) {
+        throw new HttpException(
+          error.response.data.message,
+          error.response.status
+        );
+      } else if (error.name === 'ValidationError') {
+        throw new HttpException(error.errors[0], 400);
       } else {
         throw error;
       }

@@ -9,4 +9,6 @@ export enum ChapaUrls {
   TRANSFER = 'https://api.chapa.co/v1/transfers',
   BULK_TRANSFER = 'https://api.chapa.co/v1/bulk-transfers',
   VERIFY_TRANSFER = 'https://api.chapa.co/v1/transfers/verify',
+  DIRECT_CHARGE = 'https://api.chapa.co/v1/charges',
+  AUTHORIZE_DIRECT_CHARGE = 'https://api.chapa.co/v1/validate',
 }

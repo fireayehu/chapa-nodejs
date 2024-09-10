@@ -20,6 +20,8 @@
 - Bulk Transfer
 - Verify Transfer
 - All Transfer
+- Direct Charge
+- Authorize Direct Charge
 - Generate Transaction Reference (Utiltiy Function)
 - Full TypeScript Support
 
@@ -427,7 +429,7 @@ This section describes how to send funds to Bank accounts. To initiate a transfe
 
 ```typescript
 const response = await chapa.transfer({
-  account_name: 'Israel Goytom',
+  account_name: 'John Doe',
   account_number: '32423423',
   amount: '1',
   currency: 'ETB',
@@ -469,14 +471,14 @@ const response = await chapa.bulkTransfer({
   currency: 'ETB',
   bulk_data: [
     {
-      account_name: 'Fireayehu Zekarias',
+      account_name: 'John Doe',
       account_number: '09xxxxxxxx',
       amount: 1,
       reference: 'b1111124',
       bank_code: 128,
     },
     {
-      account_name: 'Fireayehu Zekarias',
+      account_name: 'John Doe',
       account_number: '09xxxxxxxx',
       amount: 1,
       reference: 'b2222e5r',
@@ -613,6 +615,110 @@ export interface GetTransfersResponse {
   status: string;
   data: Transfer[];
   meta: Meta;
+}
+```
+
+### Direct Charge
+
+This section describes how to integrate direct charges. To initiate a direct charge, simply call the `directCharge` method from `Chapa` instance, and pass to it `DirectChargeOptions` options.
+
+```typescript
+const response = await chapa.directCharge({
+  first_name: 'Fireayehu',
+  last_name: 'Zekarias'
+  email:"test@gmail.com",
+  mobile: '09xxxxxxxx',
+  currency: 'ETB',
+  amount: '1',
+  tx_ref: '3241342142sfdd',
+  type: 'telebirr',
+});
+```
+
+#### DirectChargeOptions
+
+```typescript
+type DirectChargeType =
+  | 'telebirr'
+  | 'mpesa'
+  | 'Amole'
+  | 'CBEBirr'
+  | 'Coopay-Ebirr'
+  | 'AwashBirr'
+  | string;
+
+interface DirectChargeOptions {
+  first_name?: string;
+  last_name?: string;
+  email?: string;
+  mobile: string;
+  currency: string;
+  amount: string;
+  tx_ref: string;
+  type: DirectChargeType;
+}
+```
+
+#### DirectChargeResponse
+
+```typescript
+interface Meta {
+  message: string;
+  ref_id: string;
+  verification_type: string;
+  status: string;
+  data: string;
+  payment_status: string;
+}
+
+interface DirectChargeResponse {
+  message: string;
+  status: string;
+  data: {
+    auth_type: string;
+    meta: Meta;
+  };
+}
+```
+
+### Authorize Direct Charge
+
+This section describes the necessary actions taken to authorize transactions after payment using direct charge. To authorize direct charge, simply call the `authorizeDirectCharge` method from `Chapa` instance, and pass to it `AuthorizeDirectChargeOptions` options.
+
+```typescript
+const response = await chapa.authorizeDirectCharge({
+  reference: 'CHcuKjgnN0Dk0',
+  client: '',
+  type: 'telebirr',
+});
+```
+
+#### AuthorizeDirectChargeOptions
+
+```typescript
+type DirectChargeType =
+  | 'telebirr'
+  | 'mpesa'
+  | 'Amole'
+  | 'CBEBirr'
+  | 'Coopay-Ebirr'
+  | 'AwashBirr'
+  | string;
+
+interface AuthorizeDirectChargeOptions {
+  reference: string;
+  client: string;
+  type: DirectChargeType;
+}
+```
+
+#### AuthorizeDirectChargeResponse
+
+```typescript
+export interface AuthorizeDirectChargeResponse {
+  message: string;
+  trx_ref: string;
+  processor_id: string;
 }
 ```
 
