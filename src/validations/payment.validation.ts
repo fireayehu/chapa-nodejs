@@ -1,9 +1,7 @@
 import * as yup from 'yup';
-import { InitializeOptions } from '../interfaces/initialize.interface';
+import { InitializeOptions, VerifyOptions } from '../interfaces';
 
-export const validateInitializeOptions = async (
-  initializeOptions: InitializeOptions
-) => {
+export const validateInitializeOptions = async (options: InitializeOptions) => {
   const schema = yup.object().shape({
     first_name: yup
       .string()
@@ -31,12 +29,10 @@ export const validateInitializeOptions = async (
     tx_ref: yup.string().required(),
     callback_url: yup
       .string()
-      .url()
       .nullable()
       .optional(),
     return_url: yup
       .string()
-      .url()
       .nullable()
       .optional(),
     customization: yup
@@ -75,5 +71,13 @@ export const validateInitializeOptions = async (
       .optional(),
   });
 
-  return await schema.validate(initializeOptions);
+  return await schema.validate(options);
+};
+
+export const validateVerifyOptions = async (options: VerifyOptions) => {
+  const schema = yup.object().shape({
+    tx_ref: yup.string().required(),
+  });
+
+  return await schema.validate(options);
 };

@@ -16,6 +16,10 @@
 - Create Subaccount
 - All Transaction
 - Transaction Logs
+- Transfer
+- Bulk Transfer
+- Verify Transfer
+- All Transfer
 - Generate Transaction Reference (Utiltiy Function)
 - Full TypeScript Support
 
@@ -248,92 +252,6 @@ interface GetBanksResponse {
 }
 ```
 
-### All Transaction
-
-This section describes how to get all transactions. `getTransactions` method of `Chapa` instance returns all the Transaction information. The method does not accept any options.
-
-```typescript
-const response = await chapa.getTransactions();
-```
-
-#### GetTransactionsResponse
-
-```typescript
-interface Customer {
-  id: number;
-  email: string;
-  first_name: string;
-  last_name: string;
-  mobile: string;
-}
-
-interface Transaction {
-  status: string;
-  ref_id: string;
-  type: string;
-  created_at: Date;
-  currency: string;
-  amount: string;
-  charge: string;
-  trans_id: string;
-  payment_method: string;
-  customer: Customer;
-}
-
-interface Pagination {
-  per_page: number;
-  current_page: number;
-  first_page_url: string;
-  next_page_url: string;
-  prev_page_url: string;
-}
-
-interface GetTransactionsResponse {
-  message: string;
-  status: string;
-  data: {
-    transactions: Transaction[];
-    pagination: Pagination;
-  };
-}
-```
-
-### Transaction Logs
-
-This section describes how to get timeline for a transaction. A transaction timeline is a list of events that happened to a selected transaction. To get list of timeline, simply call the `getTransactionLogs` method from `Chapa` instance, and pass to it `GetTransactionLogsOptions` options.
-
-```typescript
-const response = await chapa.getTransactionLogs({
-  ref_id: 'chewatatest-6669',
-});
-```
-
-#### VerifyOptions
-
-```typescript
-interface GetTransactionLogsOptions {
-  ref_id: string;
-}
-```
-
-#### GetTransactionLogsResponse
-
-```typescript
-interface Log {
-  item: number;
-  message: string;
-  type: string;
-  created_at: string;
-  updated_at: string;
-}
-
-interface GetTransactionLogsResponse {
-  message: string;
-  status: string;
-  data: Log[];
-}
-```
-
 ### Create Subaccount
 
 To create subaccounts, simply call the `createSubaccount` method from `Chapa` instance, and pass to it `CreateSubaccountOptions` options.
@@ -415,6 +333,287 @@ When collecting a payment, you can override the default `split_type` and `split_
       split_value: 25
     },
   ],
+```
+
+### All Transaction
+
+This section describes how to get all transactions. `getTransactions` method of `Chapa` instance returns all the Transaction information. The method does not accept any options.
+
+```typescript
+const response = await chapa.getTransactions();
+```
+
+#### GetTransactionsResponse
+
+```typescript
+interface Customer {
+  id: number;
+  email: string;
+  first_name: string;
+  last_name: string;
+  mobile: string;
+}
+
+interface Transaction {
+  status: string;
+  ref_id: string;
+  type: string;
+  created_at: Date;
+  currency: string;
+  amount: string;
+  charge: string;
+  trans_id: string;
+  payment_method: string;
+  customer: Customer;
+}
+
+interface Pagination {
+  per_page: number;
+  current_page: number;
+  first_page_url: string;
+  next_page_url: string;
+  prev_page_url: string;
+}
+
+interface GetTransactionsResponse {
+  message: string;
+  status: string;
+  data: {
+    transactions: Transaction[];
+    pagination: Pagination;
+  };
+}
+```
+
+### Transaction Logs
+
+This section describes how to get timeline for a transaction. A transaction timeline is a list of events that happened to a selected transaction. To get list of timeline, simply call the `getTransactionLogs` method from `Chapa` instance, and pass to it `GetTransactionLogsOptions` options.
+
+```typescript
+const response = await chapa.getTransactionLogs({
+  ref_id: 'chewatatest-6669',
+});
+```
+
+#### GetTransactionLogsOptions
+
+```typescript
+interface GetTransactionLogsOptions {
+  ref_id: string;
+}
+```
+
+#### GetTransactionLogsResponse
+
+```typescript
+interface Log {
+  item: number;
+  message: string;
+  type: string;
+  created_at: string;
+  updated_at: string;
+}
+
+interface GetTransactionLogsResponse {
+  message: string;
+  status: string;
+  data: Log[];
+}
+```
+
+### Transfer
+
+This section describes how to send funds to Bank accounts. To initiate a transfer, simply call the `transfer` method from `Chapa` instance, and pass to it `TransferOptions` options.
+
+```typescript
+const response = await chapa.transfer({
+  account_name: 'Israel Goytom',
+  account_number: '32423423',
+  amount: '1',
+  currency: 'ETB',
+  reference: '3241342142sfdd',
+  bank_code: 656,
+});
+```
+
+#### TransferOptions
+
+```typescript
+interface TransferOptions {
+  account_name: string;
+  account_number: string;
+  amount: string;
+  currency: string;
+  reference: string;
+  bank_code: number;
+}
+```
+
+#### TransferResponse
+
+```typescript
+interface TransferResponse {
+  message: string;
+  status: string;
+  data: string;
+}
+```
+
+### Bulk Transfer
+
+This section describes how to send funds to Bank accounts in bulk. To do this, you'll provide an array of objects called e bulk_data. Each item in this array contains details for one transfer—the same details you specify when making a single transfer. To initiate a transfer, simply call the `bulkTransfer` method from `Chapa` instance, and pass to it `BulkTransferOptions` options.
+
+```typescript
+const response = await chapa.bulkTransfer({
+  title: 'This Month Salary!',
+  currency: 'ETB',
+  bulk_data: [
+    {
+      account_name: 'Fireayehu Zekarias',
+      account_number: '09xxxxxxxx',
+      amount: 1,
+      reference: 'b1111124',
+      bank_code: 128,
+    },
+    {
+      account_name: 'Fireayehu Zekarias',
+      account_number: '09xxxxxxxx',
+      amount: 1,
+      reference: 'b2222e5r',
+      bank_code: 128,
+    },
+  ],
+});
+```
+
+#### BulkTransferOptions
+
+```typescript
+interface BulkData {
+  account_name: string;
+  account_number: string;
+  amount: string;
+  reference: string;
+  bank_code: number;
+}
+
+interface BulkTransferOptions {
+  title: string;
+  currency: string;
+  bulk_data: BulkData[];
+}
+```
+
+#### BulkTransferResponse
+
+```typescript
+interface BulkTransferResponse {
+  message: string;
+  status: string;
+  data: {
+    id: number;
+    created_at: string;
+  };
+}
+```
+
+### Verify Transfer
+
+To verify transfer, simply call the `verifyTransfer` method from `Chapa` instance, and pass to it `VerifyTransferOptions` options.
+
+```typescript
+const response = await chapa.verifyTransfer({
+  tx_ref: 'TX-JHBUVLM7HYMSWDA',
+});
+```
+
+#### VerifyTransferOptions
+
+```typescript
+interface VerifyTransferOptions {
+  tx_ref: string;
+}
+```
+
+#### VerifyTransferResponse
+
+```typescript
+interface Data {
+  account_name: string;
+  account_number: string;
+  mobile: string;
+  currency: string;
+  amount: number;
+  charge: number;
+  mode: string;
+  transfer_method: string;
+  narration: string;
+  chapa_transfer_id: string;
+  bank_code: number;
+  bank_name: string;
+  cross_party_reference: string;
+  ip_address: string;
+  status: string;
+  tx_ref: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface VerifyTransferResponse {
+  message: string;
+  status: string;
+  data: Data;
+}
+```
+
+### All Transfer
+
+This section describes how to get all transfers. `getTransfers` method of `Chapa` instance returns all the transfer information. The method does not accept any options.
+
+```typescript
+const response = await chapa.getTransfers();
+```
+
+#### GetTransfersResponse
+
+```typescript
+interface Meta {
+  current_page: number;
+  first_page_url: string;
+  last_page: number;
+  last_page_url: string;
+  next_page_url: string;
+  path: string;
+  per_page: number;
+  prev_page_url: null;
+  to: number;
+  total: number;
+  error: any[];
+}
+
+interface Transfer {
+  account_name: string;
+  account_number: string;
+  currency: string;
+  amount: number;
+  charge: number;
+  transfer_type: string;
+  chapa_reference: string;
+  bank_code: number;
+  bank_name: string;
+  bank_reference: string;
+  status: string;
+  reference: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface GetTransfersResponse {
+  message: string;
+  status: string;
+  data: Transfer[];
+  meta: Meta;
+}
 ```
 
 ## Stay in touch

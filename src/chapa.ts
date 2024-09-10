@@ -4,6 +4,8 @@ import { alphanumeric } from 'nanoid-dictionary';
 import { ChapaUrls } from './enums';
 import { HttpException } from './http-exception';
 import {
+  BulkTransferOptions,
+  BulkTransferResponse,
   ChapaOptions,
   CreateSubaccountOptions,
   CreateSubaccountResponse,
@@ -12,17 +14,24 @@ import {
   GetTransactionLogsOptions,
   GetTransactionLogsResponse,
   GetTransactionsResponse,
+  GetTransfersResponse,
   InitializeOptions,
   InitializeResponse,
+  TransferOptions,
+  TransferResponse,
   VerifyOptions,
   VerifyResponse,
+  VerifyTransferOptions,
+  VerifyTransferResponse,
 } from './interfaces';
 import {
+  validateBulkTransferOptions,
   validateCreateSubaccountOptions,
+  validateGetTransactionLogsOptions,
   validateInitializeOptions,
+  validateTransferOptions,
   validateVerifyOptions,
 } from './validations';
-import { validateGetTransactionLogsOptions } from './validations/transaction.validation';
 
 interface IChapa {
   initialize(options: InitializeOptions): Promise<InitializeResponse>;
@@ -37,6 +46,12 @@ interface IChapa {
   getTransactionLogs(
     options: GetTransactionLogsOptions
   ): Promise<GetTransactionLogsResponse>;
+  transfer(options: TransferOptions): Promise<TransferResponse>;
+  bulkTransfer(options: BulkTransferOptions): Promise<BulkTransferResponse>;
+  verifyTransfer(
+    options: VerifyTransferOptions
+  ): Promise<VerifyTransferResponse>;
+  getTransfers(): Promise<GetTransfersResponse>;
 }
 
 export class Chapa implements IChapa {
@@ -140,7 +155,7 @@ export class Chapa implements IChapa {
 
   async getBanks(): Promise<GetBanksResponse> {
     try {
-      const banks = await axios.get<GetBanksResponse>(ChapaUrls.BANKS, {
+      const banks = await axios.get<GetBanksResponse>(ChapaUrls.BANK, {
         headers: {
           Authorization: `Bearer ${this.chapaOptions.secretKey}`,
         },
@@ -190,7 +205,7 @@ export class Chapa implements IChapa {
   async getTransactions(): Promise<GetTransactionsResponse> {
     try {
       const response = await axios.get<GetTransactionsResponse>(
-        ChapaUrls.TRANSACTIONS,
+        ChapaUrls.TRANSACTION,
         {
           headers: {
             Authorization: `Bearer ${this.chapaOptions.secretKey}`,
@@ -216,7 +231,7 @@ export class Chapa implements IChapa {
     try {
       await validateGetTransactionLogsOptions(options);
       const response = await axios.get<GetTransactionLogsResponse>(
-        `${ChapaUrls.TRANSACTIONS_LOGS}/${options.ref_id}`,
+        `${ChapaUrls.TRANSACTION_LOG}/${options.ref_id}`,
         {
           headers: {
             Authorization: `Bearer ${this.chapaOptions.secretKey}`,
@@ -232,6 +247,115 @@ export class Chapa implements IChapa {
         );
       } else if (error.name === 'ValidationError') {
         throw new HttpException(error.errors[0], 400);
+      } else {
+        throw error;
+      }
+    }
+  }
+
+  async transfer(options: TransferOptions): Promise<TransferResponse> {
+    try {
+      await validateTransferOptions(options);
+
+      const response = await axios.post<TransferResponse>(
+        ChapaUrls.TRANSFER,
+        options,
+        {
+          headers: {
+            Authorization: `Bearer ${this.chapaOptions.secretKey}`,
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      if (error.response) {
+        throw new HttpException(
+          error.response.data.message,
+          error.response.status
+        );
+      } else if (error.name === 'ValidationError') {
+        throw new HttpException(error.errors[0], 400);
+      } else {
+        throw error;
+      }
+    }
+  }
+
+  async bulkTransfer(
+    options: BulkTransferOptions
+  ): Promise<BulkTransferResponse> {
+    try {
+      await validateBulkTransferOptions(options);
+
+      const response = await axios.post<BulkTransferResponse>(
+        ChapaUrls.BULK_TRANSFER,
+        options,
+        {
+          headers: {
+            Authorization: `Bearer ${this.chapaOptions.secretKey}`,
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      if (error.response) {
+        throw new HttpException(
+          error.response.data.message,
+          error.response.status
+        );
+      } else if (error.name === 'ValidationError') {
+        throw new HttpException(error.errors[0], 400);
+      } else {
+        throw error;
+      }
+    }
+  }
+
+  async verifyTransfer(
+    options: VerifyTransferOptions
+  ): Promise<VerifyTransferResponse> {
+    try {
+      await validateVerifyOptions(options);
+      const response = await axios.get<VerifyTransferResponse>(
+        `${ChapaUrls.VERIFY_TRANSFER}/${options.tx_ref}`,
+        {
+          headers: {
+            Authorization: `Bearer ${this.chapaOptions.secretKey}`,
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      if (error.response) {
+        throw new HttpException(
+          error.response.data.message,
+          error.response.status
+        );
+      } else if (error.name === 'ValidationError') {
+        throw new HttpException(error.errors[0], 400);
+      } else {
+        throw error;
+      }
+    }
+  }
+
+  async getTransfers(): Promise<GetTransfersResponse> {
+    try {
+      const response = await axios.get<GetTransfersResponse>(
+        ChapaUrls.TRANSFER,
+        {
+          headers: {
+            Authorization: `Bearer ${this.chapaOptions.secretKey}`,
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      if (error.response) {
+        throw new HttpException(
+          error.response.data.message,
+          error.response.status
+        );
       } else {
         throw error;
       }
