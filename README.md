@@ -12,8 +12,10 @@
 - Initialize Transaction
 - Split Payment
 - Verify Payment
-- Get Banks
+- List Banks
 - Create Subaccount
+- All Transaction
+- Transaction Logs
 - Generate Transaction Reference (Utiltiy Function)
 - Full TypeScript Support
 
@@ -214,7 +216,7 @@ interface VerifyResponse {
 }
 ```
 
-### Get Banks
+### List Banks
 
 This section describes how to get bank details for all supported banks `Chapa` is working with. `getBanks` method of `Chapa` instance returns all the Banks information for all currencies. The method does not accept any options.
 
@@ -243,6 +245,92 @@ interface Data {
 interface GetBanksResponse {
   message: string;
   data: Data[];
+}
+```
+
+### All Transaction
+
+This section describes how to get all transactions. `getTransactions` method of `Chapa` instance returns all the Transaction information. The method does not accept any options.
+
+```typescript
+const response = await chapa.getTransactions();
+```
+
+#### GetTransactionsResponse
+
+```typescript
+interface Customer {
+  id: number;
+  email: string;
+  first_name: string;
+  last_name: string;
+  mobile: string;
+}
+
+interface Transaction {
+  status: string;
+  ref_id: string;
+  type: string;
+  created_at: Date;
+  currency: string;
+  amount: string;
+  charge: string;
+  trans_id: string;
+  payment_method: string;
+  customer: Customer;
+}
+
+interface Pagination {
+  per_page: number;
+  current_page: number;
+  first_page_url: string;
+  next_page_url: string;
+  prev_page_url: string;
+}
+
+interface GetTransactionsResponse {
+  message: string;
+  status: string;
+  data: {
+    transactions: Transaction[];
+    pagination: Pagination;
+  };
+}
+```
+
+### Transaction Logs
+
+This section describes how to get timeline for a transaction. A transaction timeline is a list of events that happened to a selected transaction. To get list of timeline, simply call the `getTransactionLogs` method from `Chapa` instance, and pass to it `GetTransactionLogsOptions` options.
+
+```typescript
+const response = await chapa.getTransactionLogs({
+  ref_id: 'chewatatest-6669',
+});
+```
+
+#### VerifyOptions
+
+```typescript
+interface GetTransactionLogsOptions {
+  ref_id: string;
+}
+```
+
+#### GetTransactionLogsResponse
+
+```typescript
+interface Log {
+  item: number;
+  message: string;
+  type: string;
+  created_at: string;
+  updated_at: string;
+}
+
+interface GetTransactionLogsResponse {
+  message: string;
+  status: string;
+  data: Log[];
 }
 ```
 

@@ -4,3 +4,4 @@ export * from './verify.interface';
 export * from './gen-tx-ref.interface';
 export * from './get-banks.interface';
 export * from './create-subaccount.interface';
+export * from './transaction.interface';
