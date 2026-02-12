@@ -22,6 +22,7 @@
 - All Transfer
 - Direct Charge
 - Authorize Direct Charge
+- Refund
 - Generate Transaction Reference (Utiltiy Function)
 - Full TypeScript Support
 
@@ -719,6 +720,47 @@ export interface AuthorizeDirectChargeResponse {
   message: string;
   trx_ref: string;
   processor_id: string;
+}
+```
+
+### Refund
+
+This section describes how to process refunds for transactions. To initiate a refund, simply call the `refund` method from `Chapa` instance, and pass to it `RefundOptions` options.
+
+```typescript
+const response = await chapa.refund({
+  tx_ref: 'TX-JHBUVLM7HYMSWDA',
+  reason: 'accidental purchase',
+  amount: '1000',
+  meta: {
+    customer_id: '123',
+    reference: 'REF123',
+  },
+});
+```
+
+#### RefundOptions
+
+```typescript
+interface RefundOptions {
+  tx_ref: string;
+  reason?: string;
+  amount?: string;
+  meta?: {
+    customer_id?: string;
+    reference?: string;
+    [key: string]: any;
+  };
+}
+```
+
+#### RefundResponse
+
+```typescript
+interface RefundResponse {
+  message: string;
+  status: string;
+  data: any;
 }
 ```
 
