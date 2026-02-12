@@ -6,3 +6,4 @@ export * from './create-subaccount.interface';
 export * from './transaction.interface';
 export * from './transfer.interface';
 export * from './direct-charge.interface';
+export * from './refund.interface';
