@@ -11,4 +11,5 @@ export enum ChapaUrls {
   VERIFY_TRANSFER = 'https://api.chapa.co/v1/transfers/verify',
   DIRECT_CHARGE = 'https://api.chapa.co/v1/charges',
   AUTHORIZE_DIRECT_CHARGE = 'https://api.chapa.co/v1/validate',
+  REFUND = 'https://api.chapa.co/v1/refund',
 }

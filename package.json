@@ -64,6 +64,7 @@
   },
   "devDependencies": {
     "@size-limit/preset-small-lib": "^11.1.5",
+    "@types/jest": "^30.0.0",
     "@types/nanoid-dictionary": "^4.2.3",
     "husky": "^9.1.5",
     "size-limit": "^11.1.5",
