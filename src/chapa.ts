@@ -21,6 +21,8 @@ import {
   GetTransfersResponse,
   InitializeOptions,
   InitializeResponse,
+  RefundOptions,
+  RefundResponse,
   TransferOptions,
   TransferResponse,
   VerifyOptions,
@@ -35,6 +37,7 @@ import {
   validateDirectChargeOptions,
   validateGetTransactionLogsOptions,
   validateInitializeOptions,
+  validateRefundOptions,
   validateTransferOptions,
   validateVerifyOptions,
 } from './validations';
@@ -62,6 +65,7 @@ interface IChapa {
   authorizeDirectCharge(
     options: AuthorizeDirectChargeOptions
   ): Promise<AuthorizeDirectChargeResponse>;
+  refund(options: RefundOptions): Promise<RefundResponse>;
 }
 
 export class Chapa implements IChapa {
@@ -419,6 +423,36 @@ export class Chapa implements IChapa {
             type: options.type,
           },
           headers: {
+            Authorization: `Bearer ${this.chapaOptions.secretKey}`,
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      if (error.response) {
+        throw new HttpException(
+          error.response.data.message,
+          error.response.status
+        );
+      } else if (error.name === 'ValidationError') {
+        throw new HttpException(error.errors[0], 400);
+      } else {
+        throw error;
+      }
+    }
+  }
+
+  async refund(options: RefundOptions): Promise<RefundResponse> {
+    try {
+      await validateRefundOptions(options);
+
+      const { tx_ref, ...body } = options;
+      const response = await axios.post<RefundResponse>(
+        `${ChapaUrls.REFUND}/${tx_ref}`,
+        body,
+        {
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
             Authorization: `Bearer ${this.chapaOptions.secretKey}`,
           },
         }
