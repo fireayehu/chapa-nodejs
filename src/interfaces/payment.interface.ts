@@ -67,8 +67,8 @@ export interface VerifyResponse {
       description: string;
       logo: string;
     };
-    meta: any;
-    created_at: Date;
-    updated_at: Date;
+    meta: Record<string, unknown>;
+    created_at: string;
+    updated_at: string;
   };
 }
