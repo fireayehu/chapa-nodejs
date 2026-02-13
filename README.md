@@ -11,7 +11,6 @@
   <a href="https://www.npmjs.com/package/chapa-nodejs"><img src="https://img.shields.io/npm/v/chapa-nodejs.svg" alt="NPM Version" /></a>
   <a href="https://www.npmjs.com/package/chapa-nodejs"><img src="https://img.shields.io/npm/dm/chapa-nodejs.svg" alt="NPM Downloads" /></a>
   <a href="https://github.com/fireayehu/chapa-nodejs/actions"><img src="https://github.com/fireayehu/chapa-nodejs/workflows/CI/badge.svg" alt="CI Status" /></a>
-  <a href="https://codecov.io/gh/fireayehu/chapa-nodejs"><img src="https://codecov.io/gh/fireayehu/chapa-nodejs/branch/main/graph/badge.svg" alt="Coverage" /></a>
   <a href="https://github.com/fireayehu/chapa-nodejs/blob/main/LICENSE"><img src="https://img.shields.io/npm/l/chapa-nodejs.svg" alt="License" /></a>
 </p>
 
