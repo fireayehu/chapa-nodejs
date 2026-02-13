@@ -1,0 +1,29 @@
+# Source files
+src/
+test/
+coverage/
+
+# Config files
+.changeset/
+.github/
+.husky/
+.vscode/
+.idea/
+*.config.js
+*.config.mjs
+tsconfig.json
+.editorconfig
+.eslintrc.js
+.prettierrc
+.nvmrc
+
+# Documentation (keep only essential)
+CONTRIBUTING.md
+CODE_OF_CONDUCT.md
+
+# Misc
+*.log
+.DS_Store
+*.tsbuildinfo
+pnpm-lock.yaml
+pnpm-workspace.yaml
