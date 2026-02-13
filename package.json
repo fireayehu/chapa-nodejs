@@ -1,6 +1,6 @@
 {
   "name": "chapa-nodejs",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "NodeJS SDK for Chapa payment gateway",
   "license": "MIT",
   "author": "Fireayehu Zekarias<fireayehuzekarias@gmail.com>",
