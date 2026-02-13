@@ -1,9 +1,12 @@
-## 2.3.0
+## 2.1.1
+
+### Patch Changes
+
+- Add AbortSignal support for request cancellation, configurable timeout, exponential backoff for retries, and update TypeScript target to ES2020
 
 ### Minor Changes
 
 - Major improvements and new features:
-
   - Added request/response logging with optional `logging` flag
   - Implemented retry logic for failed requests with `retries` and `retryDelay` options
   - Added webhook signature verification utility (`verifyWebhook` method)

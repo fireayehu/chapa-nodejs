@@ -27,6 +27,7 @@
 ## Features
 
 **Core Features**
+
 - Secure payment initialization (Web & Mobile)
 - Payment verification
 - Split payments & subaccounts
@@ -36,10 +37,12 @@
 - Webhook signature verification
 
 **Developer Experience**
+
 - Full TypeScript support with type definitions
 - Input validation with Zod
-- Automatic retry logic for failed requests
+- Automatic retry logic with exponential backoff for failed requests
 - Request/response logging & debug mode
+- Request cancellation support (AbortSignal)
 - Comprehensive error handling
 - 85%+ test coverage
 
@@ -87,13 +90,44 @@ const verification = await chapa.verify({ tx_ref });
 
 ```typescript
 const chapa = new Chapa({
-  secretKey: 'your-secret-key',        // Required
+  secretKey: 'your-secret-key', // Required
   webhookSecret: 'your-webhook-secret', // Optional: for webhook verification
-  logging: true,                        // Optional: enable request/response logging
-  debug: true,                          // Optional: detailed debug information
-  retries: 3,                           // Optional: retry failed requests (default: 0)
-  retryDelay: 2000,                     // Optional: delay between retries in ms (default: 1000)
+  logging: true, // Optional: enable request/response logging
+  debug: true, // Optional: detailed debug information
+  retries: 3, // Optional: retry failed requests (default: 0)
+  retryDelay: 2000, // Optional: delay between retries in ms (default: 1000)
+  timeout: 30000, // Optional: request timeout in ms (default: 30000)
 });
+```
+
+### Request Cancellation
+
+All async methods support cancellation via `AbortSignal`:
+
+```typescript
+const controller = new AbortController();
+const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+try {
+  const response = await chapa.initialize(
+    {
+      first_name: 'John',
+      last_name: 'Doe',
+      email: 'john@example.com',
+      currency: 'ETB',
+      amount: '1000',
+      tx_ref: chapa.genTxRef(),
+      return_url: 'https://example.com/return',
+    },
+    controller.signal
+  );
+} catch (error) {
+  if (error.name === 'AbortError') {
+    // Request was cancelled
+  }
+} finally {
+  clearTimeout(timeoutId);
+}
 ```
 
 ## Documentation
@@ -120,6 +154,7 @@ const response = await chapa.initialize({
   },
 });
 ```
+
 </details>
 
 <details>
@@ -134,6 +169,7 @@ if (response.data.status === 'success') {
   // Payment successful
 }
 ```
+
 </details>
 
 <details>
@@ -151,7 +187,7 @@ app.post('/webhook', (req, res) => {
   const signature = req.headers['x-chapa-signature'] as string;
   const rawBody = req.body; // ensure this is the raw body string
   const isValid = chapa.verifyWebhook(rawBody, signature);
-  
+
   if (isValid) {
     // Process webhook
     res.status(200).send('OK');
@@ -160,6 +196,7 @@ app.post('/webhook', (req, res) => {
   }
 });
 ```
+
 </details>
 
 ### Bank Operations
@@ -170,6 +207,7 @@ app.post('/webhook', (req, res) => {
 ```typescript
 const banks = await chapa.getBanks();
 ```
+
 </details>
 
 <details>
@@ -185,6 +223,7 @@ const response = await chapa.transfer({
   bank_code: 128,
 });
 ```
+
 </details>
 
 <details>
@@ -206,6 +245,7 @@ const response = await chapa.bulkTransfer({
   ],
 });
 ```
+
 </details>
 
 ### Subaccounts & Split Payments
@@ -225,6 +265,7 @@ const response = await chapa.createSubaccount({
   split_value: 0.05, // 5%
 });
 ```
+
 </details>
 
 <details>
@@ -242,6 +283,7 @@ const response = await chapa.initialize({
   ],
 });
 ```
+
 </details>
 
 ### Direct Charge
@@ -258,6 +300,7 @@ const response = await chapa.directCharge({
   type: 'telebirr',
 });
 ```
+
 </details>
 
 ### Refunds
@@ -272,6 +315,7 @@ const response = await chapa.refund({
   amount: '1000', // Optional: partial refund
 });
 ```
+
 </details>
 
 ### Utility Functions
@@ -281,17 +325,18 @@ const response = await chapa.refund({
 
 ```typescript
 // Default: TX-XXXXXXXXXXXXXXX
-const ref1 = await chapa.genTxRef();
+const ref1 = chapa.genTxRef();
 
 // Custom prefix
-const ref2 = await chapa.genTxRef({ prefix: 'ORDER' });
+const ref2 = chapa.genTxRef({ prefix: 'ORDER' });
 
 // No prefix
-const ref3 = await chapa.genTxRef({ removePrefix: true });
+const ref3 = chapa.genTxRef({ removePrefix: true });
 
 // Custom size
-const ref4 = await chapa.genTxRef({ size: 20 });
+const ref4 = chapa.genTxRef({ size: 20 });
 ```
+
 </details>
 
 ## Error Handling
@@ -313,12 +358,12 @@ try {
 Full TypeScript support with comprehensive type definitions:
 
 ```typescript
-import { 
-  Chapa, 
-  InitializeOptions, 
+import {
+  Chapa,
+  InitializeOptions,
   InitializeResponse,
   VerifyResponse,
-  SplitType 
+  SplitType,
 } from 'chapa-nodejs';
 ```
 
@@ -354,7 +399,7 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 <details>
 <summary><b>Detailed Statistics</b></summary>
 
-![Alt](https://repobeats.axiom.co/api/embed/YOUR_REPO_ID.svg "Repobeats analytics image")
+![Alt](https://repobeats.axiom.co/api/embed/YOUR_REPO_ID.svg 'Repobeats analytics image')
 
 ### Activity Graph
 
