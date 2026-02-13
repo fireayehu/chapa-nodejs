@@ -60,6 +60,7 @@ describe('Chapa', () => {
       expect(result).toEqual(mockResponse.data);
       expect(mockAxiosInstance.post).toHaveBeenCalledWith(
         '/transaction/initialize',
+        expect.any(Object),
         expect.any(Object)
       );
     });
@@ -107,7 +108,8 @@ describe('Chapa', () => {
 
       expect(result).toEqual(mockResponse.data);
       expect(mockAxiosInstance.get).toHaveBeenCalledWith(
-        '/transaction/verify/TX-123'
+        '/transaction/verify/TX-123',
+        expect.any(Object)
       );
     });
   });
@@ -125,7 +127,10 @@ describe('Chapa', () => {
       const result = await chapa.getBanks();
 
       expect(result).toEqual(mockResponse.data);
-      expect(mockAxiosInstance.get).toHaveBeenCalledWith('/banks');
+      expect(mockAxiosInstance.get).toHaveBeenCalledWith(
+        '/banks',
+        expect.any(Object)
+      );
     });
   });
 
