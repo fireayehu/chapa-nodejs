@@ -2,3 +2,15 @@
 .DS_Store
 node_modules
 dist
+coverage
+.changeset/*.md
+!.changeset/README.md
+*.tsbuildinfo
+.env
+.env.local
+.env.*.local
+.vscode
+.idea
+*.swp
+*.swo
+*~
