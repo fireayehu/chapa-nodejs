@@ -1,21 +1,18 @@
-import * as yup from 'yup';
+import { z } from 'zod';
 import { SplitType } from '../enums';
 import { CreateSubaccountOptions } from '../interfaces';
 
-export const validateCreateSubaccountOptions = async (
+const createSubaccountSchema = z.object({
+  business_name: z.string(),
+  account_name: z.string(),
+  bank_code: z.number(),
+  account_number: z.string(),
+  split_type: z.nativeEnum(SplitType),
+  split_value: z.number(),
+});
+
+export const validateCreateSubaccountOptions = (
   createSubaccountOptions: CreateSubaccountOptions
 ) => {
-  const schema = yup.object().shape({
-    business_name: yup.string().required(),
-    account_name: yup.string().required(),
-    bank_code: yup.number().required(),
-    account_number: yup.string().required(),
-    split_type: yup
-      .mixed()
-      .oneOf(Object.values(SplitType))
-      .required(),
-    split_value: yup.number().required(),
-  });
-
-  return await schema.validate(createSubaccountOptions);
+  return createSubaccountSchema.parse(createSubaccountOptions);
 };
