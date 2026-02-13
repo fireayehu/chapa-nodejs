@@ -1,8 +1,10 @@
-import axios from 'axios';
+import { AxiosInstance } from 'axios';
 import { customAlphabet } from 'nanoid';
 import { alphanumeric } from 'nanoid-dictionary';
+import { createAxiosInstance } from './axios-instance';
 import { ChapaUrls } from './enums';
-import { HttpException } from './http-exception';
+import { withErrorHandling } from './utils';
+import { verifyWebhookSignature, WebhookPayload } from './webhook';
 import {
   AuthorizeDirectChargeOptions,
   AuthorizeDirectChargeResponse,
@@ -40,6 +42,7 @@ import {
   validateRefundOptions,
   validateTransferOptions,
   validateVerifyOptions,
+  validateVerifyTransferOptions,
 } from './validations';
 
 interface IChapa {
@@ -66,93 +69,56 @@ interface IChapa {
     options: AuthorizeDirectChargeOptions
   ): Promise<AuthorizeDirectChargeResponse>;
   refund(options: RefundOptions): Promise<RefundResponse>;
+  verifyWebhook(payload: WebhookPayload | string, signature: string): boolean;
 }
 
 export class Chapa implements IChapa {
-  constructor(private chapaOptions: ChapaOptions) {}
+  private axiosInstance: AxiosInstance;
+  private webhookSecret?: string;
+
+  constructor(chapaOptions: ChapaOptions) {
+    this.axiosInstance = createAxiosInstance(
+      chapaOptions.secretKey,
+      chapaOptions.logging,
+      chapaOptions.debug,
+      chapaOptions.retries,
+      chapaOptions.retryDelay
+    );
+    this.webhookSecret = chapaOptions.webhookSecret;
+  }
 
   async initialize(options: InitializeOptions): Promise<InitializeResponse> {
-    try {
-      await validateInitializeOptions(options);
-
-      const response = await axios.post<InitializeResponse>(
+    return withErrorHandling(async () => {
+      validateInitializeOptions(options);
+      const response = await this.axiosInstance.post<InitializeResponse>(
         ChapaUrls.INITIALIZE,
-        options,
-        {
-          headers: {
-            Authorization: `Bearer ${this.chapaOptions.secretKey}`,
-          },
-        }
+        options
       );
       return response.data;
-    } catch (error) {
-      if (error.response) {
-        throw new HttpException(
-          error.response.data.message,
-          error.response.status
-        );
-      } else if (error.name === 'ValidationError') {
-        throw new HttpException(error.errors[0], 400);
-      } else {
-        throw error;
-      }
-    }
+    });
   }
 
   async mobileInitialize(
     options: InitializeOptions
   ): Promise<InitializeResponse> {
-    try {
-      await validateInitializeOptions(options);
-
-      const response = await axios.post<InitializeResponse>(
+    return withErrorHandling(async () => {
+      validateInitializeOptions(options);
+      const response = await this.axiosInstance.post<InitializeResponse>(
         ChapaUrls.MOBILE_INITIALIZE,
-        options,
-        {
-          headers: {
-            Authorization: `Bearer ${this.chapaOptions.secretKey}`,
-          },
-        }
+        options
       );
       return response.data;
-    } catch (error) {
-      if (error.response) {
-        throw new HttpException(
-          error.response.data.message,
-          error.response.status
-        );
-      } else if (error.name === 'ValidationError') {
-        throw new HttpException(error.errors[0], 400);
-      } else {
-        throw error;
-      }
-    }
+    });
   }
 
   async verify(options: VerifyOptions): Promise<VerifyResponse> {
-    try {
-      await validateVerifyOptions(options);
-      const response = await axios.get<VerifyResponse>(
-        `${ChapaUrls.VERIFY}/${options.tx_ref}`,
-        {
-          headers: {
-            Authorization: `Bearer ${this.chapaOptions.secretKey}`,
-          },
-        }
+    return withErrorHandling(async () => {
+      validateVerifyOptions(options);
+      const response = await this.axiosInstance.get<VerifyResponse>(
+        `${ChapaUrls.VERIFY}/${options.tx_ref}`
       );
       return response.data;
-    } catch (error) {
-      if (error.response) {
-        throw new HttpException(
-          error.response.data.message,
-          error.response.status
-        );
-      } else if (error.name === 'ValidationError') {
-        throw new HttpException(error.errors[0], 400);
-      } else {
-        throw error;
-      }
-    }
+    });
   }
 
   async genTxRef(options?: GenTxRefOptions): Promise<string> {
@@ -168,307 +134,162 @@ export class Chapa implements IChapa {
   }
 
   async getBanks(): Promise<GetBanksResponse> {
-    try {
-      const banks = await axios.get<GetBanksResponse>(ChapaUrls.BANK, {
-        headers: {
-          Authorization: `Bearer ${this.chapaOptions.secretKey}`,
-        },
-      });
+    return withErrorHandling(async () => {
+      const banks = await this.axiosInstance.get<GetBanksResponse>(
+        ChapaUrls.BANK
+      );
       return banks.data;
-    } catch (error) {
-      if (error.response) {
-        throw new HttpException(
-          error.response.data.message,
-          error.response.status
-        );
-      } else {
-        throw error;
-      }
-    }
+    });
   }
 
   async createSubaccount(
     options: CreateSubaccountOptions
   ): Promise<CreateSubaccountResponse> {
-    try {
-      await validateCreateSubaccountOptions(options);
-      const response = await axios.post<CreateSubaccountResponse>(
+    return withErrorHandling(async () => {
+      validateCreateSubaccountOptions(options);
+      const response = await this.axiosInstance.post<CreateSubaccountResponse>(
         ChapaUrls.SUBACCOUNT,
-        options,
-        {
-          headers: {
-            Authorization: `Bearer ${this.chapaOptions.secretKey}`,
-          },
-        }
+        options
       );
       return response.data;
-    } catch (error) {
-      if (error.response) {
-        throw new HttpException(
-          error.response.data.message,
-          error.response.status
-        );
-      } else if (error.name === 'ValidationError') {
-        throw new HttpException(error.errors[0], 400);
-      } else {
-        throw error;
-      }
-    }
+    });
   }
 
   async getTransactions(): Promise<GetTransactionsResponse> {
-    try {
-      const response = await axios.get<GetTransactionsResponse>(
-        ChapaUrls.TRANSACTION,
-        {
-          headers: {
-            Authorization: `Bearer ${this.chapaOptions.secretKey}`,
-          },
-        }
+    return withErrorHandling(async () => {
+      const response = await this.axiosInstance.get<GetTransactionsResponse>(
+        ChapaUrls.TRANSACTION
       );
       return response.data;
-    } catch (error) {
-      if (error.response) {
-        throw new HttpException(
-          error.response.data.message,
-          error.response.status
-        );
-      } else {
-        throw error;
-      }
-    }
+    });
   }
 
   async getTransactionLogs(
     options: GetTransactionLogsOptions
   ): Promise<GetTransactionLogsResponse> {
-    try {
-      await validateGetTransactionLogsOptions(options);
-      const response = await axios.get<GetTransactionLogsResponse>(
-        `${ChapaUrls.TRANSACTION_LOG}/${options.ref_id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${this.chapaOptions.secretKey}`,
-          },
-        }
+    return withErrorHandling(async () => {
+      validateGetTransactionLogsOptions(options);
+      const response = await this.axiosInstance.get<GetTransactionLogsResponse>(
+        `${ChapaUrls.TRANSACTION_LOG}/${options.ref_id}`
       );
       return response.data;
-    } catch (error) {
-      if (error.response) {
-        throw new HttpException(
-          error.response.data.message,
-          error.response.status
-        );
-      } else if (error.name === 'ValidationError') {
-        throw new HttpException(error.errors[0], 400);
-      } else {
-        throw error;
-      }
-    }
+    });
   }
 
   async transfer(options: TransferOptions): Promise<TransferResponse> {
-    try {
-      await validateTransferOptions(options);
-
-      const response = await axios.post<TransferResponse>(
+    return withErrorHandling(async () => {
+      validateTransferOptions(options);
+      const response = await this.axiosInstance.post<TransferResponse>(
         ChapaUrls.TRANSFER,
-        options,
-        {
-          headers: {
-            Authorization: `Bearer ${this.chapaOptions.secretKey}`,
-          },
-        }
+        options
       );
       return response.data;
-    } catch (error) {
-      if (error.response) {
-        throw new HttpException(
-          error.response.data.message,
-          error.response.status
-        );
-      } else if (error.name === 'ValidationError') {
-        throw new HttpException(error.errors[0], 400);
-      } else {
-        throw error;
-      }
-    }
+    });
   }
 
   async bulkTransfer(
     options: BulkTransferOptions
   ): Promise<BulkTransferResponse> {
-    try {
-      await validateBulkTransferOptions(options);
-
-      const response = await axios.post<BulkTransferResponse>(
+    return withErrorHandling(async () => {
+      validateBulkTransferOptions(options);
+      const response = await this.axiosInstance.post<BulkTransferResponse>(
         ChapaUrls.BULK_TRANSFER,
-        options,
-        {
-          headers: {
-            Authorization: `Bearer ${this.chapaOptions.secretKey}`,
-          },
-        }
+        options
       );
       return response.data;
-    } catch (error) {
-      if (error.response) {
-        throw new HttpException(
-          error.response.data.message,
-          error.response.status
-        );
-      } else if (error.name === 'ValidationError') {
-        throw new HttpException(error.errors[0], 400);
-      } else {
-        throw error;
-      }
-    }
+    });
   }
 
   async verifyTransfer(
     options: VerifyTransferOptions
   ): Promise<VerifyTransferResponse> {
-    try {
-      await validateVerifyOptions(options);
-      const response = await axios.get<VerifyTransferResponse>(
-        `${ChapaUrls.VERIFY_TRANSFER}/${options.tx_ref}`,
-        {
-          headers: {
-            Authorization: `Bearer ${this.chapaOptions.secretKey}`,
-          },
-        }
+    return withErrorHandling(async () => {
+      validateVerifyTransferOptions(options);
+      const response = await this.axiosInstance.get<VerifyTransferResponse>(
+        `${ChapaUrls.VERIFY_TRANSFER}/${options.tx_ref}`
       );
       return response.data;
-    } catch (error) {
-      if (error.response) {
-        throw new HttpException(
-          error.response.data.message,
-          error.response.status
-        );
-      } else if (error.name === 'ValidationError') {
-        throw new HttpException(error.errors[0], 400);
-      } else {
-        throw error;
-      }
-    }
+    });
   }
 
   async getTransfers(): Promise<GetTransfersResponse> {
-    try {
-      const response = await axios.get<GetTransfersResponse>(
-        ChapaUrls.TRANSFER,
-        {
-          headers: {
-            Authorization: `Bearer ${this.chapaOptions.secretKey}`,
-          },
-        }
+    return withErrorHandling(async () => {
+      const response = await this.axiosInstance.get<GetTransfersResponse>(
+        ChapaUrls.TRANSFER
       );
       return response.data;
-    } catch (error) {
-      if (error.response) {
-        throw new HttpException(
-          error.response.data.message,
-          error.response.status
-        );
-      } else {
-        throw error;
-      }
-    }
+    });
   }
 
   async directCharge(
     options: DirectChargeOptions
   ): Promise<DirectChargeResponse> {
-    try {
-      await validateDirectChargeOptions(options);
-
-      const response = await axios.post<DirectChargeResponse>(
+    return withErrorHandling(async () => {
+      validateDirectChargeOptions(options);
+      const response = await this.axiosInstance.post<DirectChargeResponse>(
         ChapaUrls.DIRECT_CHARGE,
         options,
         {
           params: {
             type: options.type,
           },
-          headers: {
-            Authorization: `Bearer ${this.chapaOptions.secretKey}`,
-          },
         }
       );
       return response.data;
-    } catch (error) {
-      if (error.response) {
-        throw new HttpException(
-          error.response.data.message,
-          error.response.status
-        );
-      } else if (error.name === 'ValidationError') {
-        throw new HttpException(error.errors[0], 400);
-      } else {
-        throw error;
-      }
-    }
+    });
   }
 
   async authorizeDirectCharge(
     options: AuthorizeDirectChargeOptions
   ): Promise<AuthorizeDirectChargeResponse> {
-    try {
-      await validateAuthorizeDirectChargeOptions(options);
-
-      const response = await axios.post<AuthorizeDirectChargeResponse>(
-        ChapaUrls.AUTHORIZE_DIRECT_CHARGE,
-        options,
-        {
-          params: {
-            type: options.type,
-          },
-          headers: {
-            Authorization: `Bearer ${this.chapaOptions.secretKey}`,
-          },
-        }
-      );
-      return response.data;
-    } catch (error) {
-      if (error.response) {
-        throw new HttpException(
-          error.response.data.message,
-          error.response.status
+    return withErrorHandling(async () => {
+      validateAuthorizeDirectChargeOptions(options);
+      const response =
+        await this.axiosInstance.post<AuthorizeDirectChargeResponse>(
+          ChapaUrls.AUTHORIZE_DIRECT_CHARGE,
+          options,
+          {
+            params: {
+              type: options.type,
+            },
+          }
         );
-      } else if (error.name === 'ValidationError') {
-        throw new HttpException(error.errors[0], 400);
-      } else {
-        throw error;
-      }
-    }
+      return response.data;
+    });
   }
 
   async refund(options: RefundOptions): Promise<RefundResponse> {
-    try {
-      await validateRefundOptions(options);
-
+    return withErrorHandling(async () => {
+      validateRefundOptions(options);
       const { tx_ref, ...body } = options;
-      const response = await axios.post<RefundResponse>(
+      const formBody = new URLSearchParams();
+      Object.entries(body).forEach(([key, value]) => {
+        if (value === undefined) {
+          return;
+        }
+        if (key === 'meta' && typeof value === 'object' && value !== null) {
+          formBody.set(key, JSON.stringify(value));
+          return;
+        }
+        formBody.set(key, String(value));
+      });
+      const response = await this.axiosInstance.post<RefundResponse>(
         `${ChapaUrls.REFUND}/${tx_ref}`,
-        body,
+        formBody,
         {
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
-            Authorization: `Bearer ${this.chapaOptions.secretKey}`,
           },
         }
       );
       return response.data;
-    } catch (error) {
-      if (error.response) {
-        throw new HttpException(
-          error.response.data.message,
-          error.response.status
-        );
-      } else if (error.name === 'ValidationError') {
-        throw new HttpException(error.errors[0], 400);
-      } else {
-        throw error;
-      }
+    });
+  }
+
+  verifyWebhook(payload: WebhookPayload | string, signature: string): boolean {
+    if (!this.webhookSecret) {
+      throw new Error('Webhook secret not configured');
     }
+    return verifyWebhookSignature(payload, signature, this.webhookSecret);
   }
 }
