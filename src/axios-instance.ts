@@ -70,11 +70,12 @@ export function createAxiosInstance(
   logging = false,
   debug = false,
   retries = 0,
-  retryDelay = 1000
+  retryDelay = 1000,
+  timeout = DEFAULT_TIMEOUT
 ): AxiosInstance {
   const instance = axios.create({
     baseURL: BASE_URL,
-    timeout: DEFAULT_TIMEOUT,
+    timeout: timeout,
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${secretKey}`,
@@ -176,12 +177,14 @@ export function createAxiosInstance(
 
         if (shouldRetry) {
           config.__retryCount += 1;
+          const backoffDelay =
+            retryDelay * Math.pow(2, config.__retryCount - 1);
           if (debug) {
             console.log(
-              `[Chapa Debug] Retrying request (${config.__retryCount}/${retries})`
+              `[Chapa Debug] Retrying request (${config.__retryCount}/${retries}) after ${backoffDelay}ms`
             );
           }
-          await new Promise((resolve) => setTimeout(resolve, retryDelay));
+          await new Promise((resolve) => setTimeout(resolve, backoffDelay));
           return instance(config);
         }
 
