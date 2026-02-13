@@ -1,50 +1,37 @@
-import * as yup from 'yup';
+import { z } from 'zod';
 import {
   AuthorizeDirectChargeOptions,
   DirectChargeOptions,
 } from '../interfaces';
 
-export const validateDirectChargeOptions = async (
-  options: DirectChargeOptions
-) => {
-  const schema = yup.object().shape({
-    first_name: yup
-      .string()
-      .nullable()
-      .optional(),
-    last_name: yup
-      .string()
-      .nullable()
-      .optional(),
-    email: yup
-      .string()
-      .email()
-      .nullable()
-      .optional(),
-    mobile: yup
-      .string()
-      .matches(
-        /^0[79]\d{8}$/,
-        'Phone number must be 10 digits and start with 09 or 07'
-      )
-      .required(),
-    currency: yup.string().required(),
-    amount: yup.string().required(),
-    tx_ref: yup.string().required(),
-    type: yup.string().required(),
-  });
+const directChargeSchema = z.object({
+  first_name: z.string().optional(),
+  last_name: z.string().optional(),
+  email: z.string().email().optional(),
+  mobile: z
+    .string()
+    .regex(
+      /^0[79]\d{8}$/,
+      'Phone number must be 10 digits and start with 09 or 07'
+    ),
+  currency: z.string(),
+  amount: z.string(),
+  tx_ref: z.string(),
+  type: z.string(),
+});
 
-  return await schema.validate(options);
+const authorizeDirectChargeSchema = z.object({
+  reference: z.string(),
+  client: z.string(),
+  type: z.string(),
+});
+
+export const validateDirectChargeOptions = (options: DirectChargeOptions) => {
+  return directChargeSchema.parse(options);
 };
 
-export const validateAuthorizeDirectChargeOptions = async (
+export const validateAuthorizeDirectChargeOptions = (
   options: AuthorizeDirectChargeOptions
 ) => {
-  const schema = yup.object().shape({
-    reference: yup.string().required(),
-    client: yup.string().required(),
-    type: yup.string().required(),
-  });
-
-  return await schema.validate(options);
+  return authorizeDirectChargeSchema.parse(options);
 };
