@@ -1,19 +1,18 @@
-import * as yup from 'yup';
+import { z } from 'zod';
 import { RefundOptions } from '../interfaces';
 
-export const validateRefundOptions = async (options: RefundOptions) => {
-  const schema = yup.object().shape({
-    tx_ref: yup.string().required(),
-    reason: yup.string().optional(),
-    amount: yup.string().optional(),
-    meta: yup
-      .object()
-      .shape({
-        customer_id: yup.string().optional(),
-        reference: yup.string().optional(),
-      })
-      .optional(),
-  });
+const refundSchema = z.object({
+  tx_ref: z.string(),
+  reason: z.string().optional(),
+  amount: z.string().optional(),
+  meta: z
+    .object({
+      customer_id: z.string().optional(),
+      reference: z.string().optional(),
+    })
+    .optional(),
+});
 
-  return await schema.validate(options);
+export const validateRefundOptions = (options: RefundOptions) => {
+  return refundSchema.parse(options);
 };
