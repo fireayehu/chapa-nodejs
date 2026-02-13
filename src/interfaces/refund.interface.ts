@@ -5,12 +5,12 @@ export interface RefundOptions {
   meta?: {
     customer_id?: string;
     reference?: string;
-    [key: string]: any;
+    [key: string]: unknown;
   };
 }
 
 export interface RefundResponse {
   message: string;
   status: string;
-  data: any;
+  data: Record<string, unknown>;
 }
