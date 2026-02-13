@@ -5,4 +5,5 @@ export interface ChapaOptions {
   debug?: boolean;
   retries?: number;
   retryDelay?: number;
+  timeout?: number;
 }
