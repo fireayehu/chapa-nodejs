@@ -1,0 +1,34 @@
+name: Question
+description: Ask a question about chapa-nodejs
+title: "[Question]: "
+labels: ["question"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Have a question? We're here to help!
+
+  - type: textarea
+    id: question
+    attributes:
+      label: Your Question
+      description: What would you like to know?
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Provide any relevant context or what you've tried so far
+    validations:
+      required: false
+
+  - type: textarea
+    id: code
+    attributes:
+      label: Code Sample
+      description: If applicable, provide a code sample
+      render: typescript
+    validations:
+      required: false

@@ -6,8 +6,8 @@ interface Data {
   name: string;
   acct_length: number;
   country_id: number;
-  created_at: Date;
-  updated_at: Date;
+  created_at: string;
+  updated_at: string;
   is_rtgs: boolean | null;
   is_mobilemoney: boolean | null;
   currency: Currency;

@@ -1,12 +1,12 @@
-import * as yup from 'yup';
+import { z } from 'zod';
 import { GetTransactionLogsOptions } from '../interfaces';
 
-export const validateGetTransactionLogsOptions = async (
+const transactionLogsSchema = z.object({
+  ref_id: z.string(),
+});
+
+export const validateGetTransactionLogsOptions = (
   options: GetTransactionLogsOptions
 ) => {
-  const schema = yup.object().shape({
-    ref_id: yup.string().required(),
-  });
-
-  return await schema.validate(options);
+  return transactionLogsSchema.parse(options);
 };

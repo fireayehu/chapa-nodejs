@@ -59,7 +59,7 @@ interface Meta {
   prev_page_url: null;
   to: number;
   total: number;
-  error: any[];
+  error: unknown[];
 }
 
 interface Transfer {

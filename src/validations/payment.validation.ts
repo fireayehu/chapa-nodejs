@@ -1,83 +1,49 @@
-import * as yup from 'yup';
+import { z } from 'zod';
+import { SplitType } from '../enums';
 import { InitializeOptions, VerifyOptions } from '../interfaces';
 
-export const validateInitializeOptions = async (options: InitializeOptions) => {
-  const schema = yup.object().shape({
-    first_name: yup
-      .string()
-      .nullable()
-      .optional(),
-    last_name: yup
-      .string()
-      .nullable()
-      .optional(),
-    email: yup
-      .string()
-      .email()
-      .nullable()
-      .optional(),
-    phone_number: yup
-      .string()
-      .matches(
-        /^0[79]\d{8}$/,
-        'Phone number must be 10 digits and start with 09 or 07'
-      )
-      .nullable()
-      .optional(),
-    currency: yup.string().required(),
-    amount: yup.string().required(),
-    tx_ref: yup.string().required(),
-    callback_url: yup
-      .string()
-      .nullable()
-      .optional(),
-    return_url: yup
-      .string()
-      .nullable()
-      .optional(),
-    customization: yup
-      .object()
-      .shape({
-        title: yup
-          .string()
-          .nullable()
-          .optional(),
-        description: yup
-          .string()
-          .nullable()
-          .optional(),
-        logo: yup
-          .string()
-          .nullable()
-          .optional(),
+const initializeSchema = z.object({
+  first_name: z.string().optional(),
+  last_name: z.string().optional(),
+  email: z.string().email().optional(),
+  phone_number: z
+    .string()
+    .regex(
+      /^0[79]\d{8}$/,
+      'Phone number must be 10 digits and start with 09 or 07'
+    )
+    .optional(),
+  currency: z.string(),
+  amount: z.string(),
+  tx_ref: z.string(),
+  callback_url: z.string().optional(),
+  return_url: z.string().optional(),
+  customization: z
+    .object({
+      title: z.string().optional(),
+      description: z.string().optional(),
+      logo: z.string().optional(),
+    })
+    .optional(),
+  subaccounts: z
+    .array(
+      z.object({
+        id: z.string(),
+        split_type: z.nativeEnum(SplitType).optional(),
+        split_value: z.coerce.number().optional(),
       })
-      .optional(),
-    subaccounts: yup
-      .array()
-      .of(
-        yup.object().shape({
-          id: yup.string().required(),
-          split_type: yup
-            .string()
-            .nullable()
-            .optional(),
-          split_value: yup
-            .string()
-            .nullable()
-            .optional(),
-        })
-      )
-      .nullable()
-      .optional(),
-  });
+    )
+    .optional(),
+});
 
-  return await schema.validate(options);
+const verifySchema = z.object({
+  tx_ref: z.string(),
+});
+
+export const validateInitializeOptions = (options: InitializeOptions) => {
+  return initializeSchema.parse(options);
 };
 
-export const validateVerifyOptions = async (options: VerifyOptions) => {
-  const schema = yup.object().shape({
-    tx_ref: yup.string().required(),
-  });
-
-  return await schema.validate(options);
+export const validateVerifyOptions = (options: VerifyOptions) => {
+  return verifySchema.parse(options);
 };

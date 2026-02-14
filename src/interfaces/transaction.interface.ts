@@ -22,7 +22,7 @@ interface Transaction {
   status: string;
   ref_id: string;
   type: string;
-  created_at: Date;
+  created_at: string;
   currency: string;
   amount: string;
   charge: string;

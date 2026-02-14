@@ -1,776 +1,456 @@
 <h1 align="center">
 <div align="center">
   <a href="https://chapa.co/" target="_blank">
-    <img src="./docs/logo.png" width="320" alt="Nest Logo"/>
+    <img src="./docs/logo.png" width="320" alt="Chapa Logo"/>
   </a>
-  <p align="center">NodeJS SDK for chapa</p>
+  <p align="center">NodeJS SDK for Chapa Payment Gateway</p>
 </div>
 </h1>
 
+<p align="center">
+  <a href="https://www.npmjs.com/package/chapa-nodejs"><img src="https://img.shields.io/npm/v/chapa-nodejs.svg" alt="NPM Version" /></a>
+  <a href="https://www.npmjs.com/package/chapa-nodejs"><img src="https://img.shields.io/npm/dm/chapa-nodejs.svg" alt="NPM Downloads" /></a>
+  <a href="https://github.com/fireayehu/chapa-nodejs/actions"><img src="https://github.com/fireayehu/chapa-nodejs/workflows/CI/badge.svg" alt="CI Status" /></a>
+  <a href="https://github.com/fireayehu/chapa-nodejs/blob/main/LICENSE"><img src="https://img.shields.io/npm/l/chapa-nodejs.svg" alt="License" /></a>
+</p>
+
+<p align="center">
+  <a href="#features">Features</a> •
+  <a href="#installation">Installation</a> •
+  <a href="#quick-start">Quick Start</a> •
+  <a href="#documentation">Documentation</a> •
+  <a href="#contributing">Contributing</a>
+</p>
+
+---
+
 ## Features
 
-- Initialize Transaction
-- Split Payment
-- Verify Payment
-- List Banks
-- Create Subaccount
-- All Transaction
-- Transaction Logs
-- Transfer
-- Bulk Transfer
-- Verify Transfer
-- All Transfer
-- Direct Charge
-- Authorize Direct Charge
-- Refund
-- Generate Transaction Reference (Utiltiy Function)
-- Full TypeScript Support
+**Core Features**
+
+- Secure payment initialization (Web & Mobile)
+- Payment verification
+- Split payments & subaccounts
+- Bank transfers (single & bulk)
+- Direct charge (Telebirr, M-Pesa, etc.)
+- Refund processing
+- Webhook signature verification
+
+**Developer Experience**
+
+- Full TypeScript support with type definitions
+- Input validation with Zod
+- Automatic retry logic with exponential backoff for failed requests
+- Request/response logging & debug mode
+- Request cancellation support (AbortSignal)
+- Comprehensive error handling
+- 85%+ test coverage
 
 ## Installation
 
-**NPM**
-
 ```bash
-$ npm install chapa-nodejs
+# NPM
+npm install chapa-nodejs
+
+# Yarn
+yarn add chapa-nodejs
+
+# PNPM
+pnpm add chapa-nodejs
 ```
 
-**Yarn**
-
-```bash
-$ yarn add chapa-nodejs
-```
-
-**Pnpm**
-
-```bash
-$ pnpm add chapa-nodejs
-```
-
-## Getting started
-
-Once the installation process is complete, we can import the sdk in any file.
-
-&nbsp;
-
-### Configuration
-
-Keep in mind to load your secret key from environment variable
+## Quick Start
 
 ```typescript
 import { Chapa } from 'chapa-nodejs';
 
+// Initialize with your secret key
 const chapa = new Chapa({
-  secretKey: 'your-chapa-secret-key',
+  secretKey: process.env.CHAPA_SECRET_KEY,
 });
-```
 
-&nbsp;
-
-### Generate Transaction Reference
-
-This utility method of `Chapa` instance allows you to generating a customizable random alpha numberic transaction reference.
-
-```typescript
-const tx_ref = await chapa.genTxRef(); // result: TX-JHBUVLM7HYMSWDA
-
-// Or with options
-
-const tx_ref = await chapa.genTxRef({
-  removePrefix: false, // defaults to `false`
-  prefix: 'TX', // defaults to `TX`
-  size: 20, // defaults to `15`
-});
-```
-
-### Initialize Transaction
-
-To initialize a transaction, we have two possilbe ways. The first one is for web payment, simply call the `initialize` method from `Chapa` instance, and pass to it `InitializeOptions` options. For mobile payment use `mobileInitialize`, it accepts and returns the same format as the `initialize` method.
-
-```typescript
-// Generate transaction reference using our utility method or provide your own
+// Initialize a payment
 const tx_ref = await chapa.genTxRef();
-
 const response = await chapa.initialize({
   first_name: 'John',
   last_name: 'Doe',
-  email: 'john@gmail.com',
-  phone_number: '0911121314',
+  email: 'john@example.com',
   currency: 'ETB',
-  amount: '200',
+  amount: '1000',
   tx_ref: tx_ref,
-  callback_url: 'https://example.com/',
-  return_url: 'https://example.com/',
-  customization: {
-    title: 'Test Title',
-    description: 'Test Description',
-  },
+  callback_url: 'https://your-site.com/callback',
+  return_url: 'https://your-site.com/return',
+});
+
+// Verify payment
+const verification = await chapa.verify({ tx_ref });
+```
+
+## Configuration Options
+
+```typescript
+const chapa = new Chapa({
+  secretKey: 'your-secret-key', // Required
+  webhookSecret: 'your-webhook-secret', // Optional: for webhook verification
+  logging: true, // Optional: enable request/response logging
+  debug: true, // Optional: detailed debug information
+  retries: 3, // Optional: retry failed requests (default: 0)
+  retryDelay: 2000, // Optional: delay between retries in ms (default: 1000)
+  timeout: 30000, // Optional: request timeout in ms (default: 30000)
 });
 ```
 
-```typescript
-// Generate transaction reference using our utility method or provide your own
-const tx_ref = await chapa.genTxRef();
+### Request Cancellation
 
-const response = await chapa.mobileInitialize({
+All async methods support cancellation via `AbortSignal`:
+
+```typescript
+const controller = new AbortController();
+const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+try {
+  const response = await chapa.initialize(
+    {
+      first_name: 'John',
+      last_name: 'Doe',
+      email: 'john@example.com',
+      currency: 'ETB',
+      amount: '1000',
+      tx_ref: chapa.genTxRef(),
+      return_url: 'https://example.com/return',
+    },
+    controller.signal
+  );
+} catch (error) {
+  if (error.name === 'AbortError') {
+    // Request was cancelled
+  }
+} finally {
+  clearTimeout(timeoutId);
+}
+```
+
+## Documentation
+
+### Payment Operations
+
+<details>
+<summary><b>Initialize Transaction</b></summary>
+
+```typescript
+const response = await chapa.initialize({
   first_name: 'John',
   last_name: 'Doe',
-  email: 'john@gmail.com',
-  phone_number: '0911121314',
+  email: 'john@example.com',
+  phone_number: '0911234567',
   currency: 'ETB',
-  amount: '200',
-  tx_ref: tx_ref,
-  callback_url: 'https://example.com/',
-  return_url: 'https://example.com/',
+  amount: '1000',
+  tx_ref: await chapa.genTxRef(),
+  callback_url: 'https://example.com/callback',
+  return_url: 'https://example.com/return',
   customization: {
-    title: 'Test Title',
-    description: 'Test Description',
+    title: 'Payment for Order #123',
+    description: 'Thank you for your purchase',
   },
 });
 ```
 
-#### InitializeOptions
+</details>
 
-```typescript
-enum SplitType {
-  PERCENTAGE = 'percentage',
-  FLAT = 'flat',
-}
-
-interface Subaccount {
-  id: string;
-  split_type?: SplitType;
-  split_value?: number;
-}
-
-interface InitializeOptions {
-  first_name?: string;
-  last_name?: string;
-  email?: string;
-  phone_number?: string;
-  currency: string;
-  amount: string;
-  tx_ref: string;
-  callback_url?: string;
-  return_url?: string;
-  customization?: {
-    title?: string;
-    description?: string;
-    logo?: string;
-  };
-  subaccounts?: Subaccount[];
-}
-```
-
-#### InitializeResponse
-
-```typescript
-interface InitializeResponse {
-  message: string;
-  status: string;
-  data: {
-    checkout_url: string;
-  };
-}
-```
-
-### Verify Payment
-
-To verify payment, simply call the `verify` method from `Chapa` instance, and pass to it `VerifyOptions` options.
+<details>
+<summary><b>Verify Payment</b></summary>
 
 ```typescript
 const response = await chapa.verify({
-  tx_ref: 'TX-JHBUVLM7HYMSWDA',
+  tx_ref: 'TX-XXXXXXXXXXXXX',
+});
+
+if (response.data.status === 'success') {
+  // Payment successful
+}
+```
+
+</details>
+
+<details>
+<summary><b>Webhook Verification</b></summary>
+
+```typescript
+// Configure with webhook secret
+const chapa = new Chapa({
+  secretKey: 'your-secret-key',
+  webhookSecret: 'your-webhook-secret',
+});
+
+// In your webhook endpoint
+app.post('/webhook', (req, res) => {
+  const signature = req.headers['x-chapa-signature'] as string;
+  const rawBody = req.body; // ensure this is the raw body string
+  const isValid = chapa.verifyWebhook(rawBody, signature);
+
+  if (isValid) {
+    // Process webhook
+    res.status(200).send('OK');
+  } else {
+    res.status(401).send('Invalid signature');
+  }
 });
 ```
 
-#### VerifyOptions
+</details>
+
+### Bank Operations
+
+<details>
+<summary><b>List Banks</b></summary>
 
 ```typescript
-interface VerifyOptions {
-  tx_ref: string;
-}
+const banks = await chapa.getBanks();
 ```
 
-#### VerifyResponse
+</details>
 
-```typescript
-interface VerifyResponse {
-  message: string;
-  status: string;
-  data: {
-    first_name: string;
-    last_name: string;
-    email: string;
-    phone_number: string;
-    currency: string;
-    amount: string;
-    charge: string;
-    mode: string;
-    method: string;
-    type: string;
-    status: string;
-    reference: string;
-    tx_ref: string;
-    customization: {
-      title: string;
-      description: string;
-      logo: string;
-    };
-    meta: any;
-    created_at: Date;
-    updated_at: Date;
-  };
-}
-```
-
-### List Banks
-
-This section describes how to get bank details for all supported banks `Chapa` is working with. `getBanks` method of `Chapa` instance returns all the Banks information for all currencies. The method does not accept any options.
-
-```typescript
-const response = await chapa.getBanks();
-```
-
-#### GetBanksResponse
-
-```typescript
-type Currency = 'ETB' | 'USD';
-
-interface Data {
-  id: number;
-  swift: string;
-  name: string;
-  acct_length: number;
-  country_id: number;
-  created_at: Date;
-  updated_at: Date;
-  is_rtgs: boolean | null;
-  is_mobilemoney: boolean | null;
-  currency: Currency;
-}
-
-interface GetBanksResponse {
-  message: string;
-  data: Data[];
-}
-```
-
-### Create Subaccount
-
-To create subaccounts, simply call the `createSubaccount` method from `Chapa` instance, and pass to it `CreateSubaccountOptions` options.
-
-```typescript
-const response = await chapa.createSubaccount({
-  business_name: 'Test Business',
-  account_name: 'John Doe',
-  bank_code: '80a510ea-7497-4499-8b49-ac13a3ab7d07', // Get this from the `getBanks()` method
-  account_number: '0123456789',
-  split_type: SplitType.PERCENTAGE,
-  split_value: 0.02,
-});
-```
-
-#### CreateSubaccountOptions
-
-```typescript
-interface CreateSubaccountOptions {
-  business_name: string;
-  account_name: string;
-  bank_code: number;
-  account_number: string;
-  split_type: SplitType;
-  split_value: number;
-}
-```
-
-#### CreateSubaccountResponse
-
-```typescript
-interface CreateSubaccountResponse {
-  message: string;
-  status: string;
-  data: string;
-}
-```
-
-### Split Payment
-
-Split payments are carried out by first creating a subaccount, then initializing the split payment. The process of implementing split payment is the same as initialize a transaction, with additional options( i.e `subaccounts`) to the `initialize` method of `Chapa`.
-
-```typescript
-// Generate transaction reference using our utility method or provide your own
-const tx_ref = await chapa.genTxRef();
-
-const response = chapa.initialize({
-  first_name: 'John',
-  last_name: 'Doe',
-  email: 'john@gmail.com',
-  phone_number: '0911121314',
-  currency: 'ETB',
-  amount: '200',
-  tx_ref: tx_ref,
-  callback_url: 'https://example.com/',
-  return_url: 'https://example.com/',
-  customization: {
-    title: 'Test Title',
-    description: 'Test Description',
-  },
-  // Add this for split payment
-  subaccounts: [
-    {
-      id: '80a510ea-7497-4499-8b49-ac13a3ab7d07',
-    },
-  ],
-});
-```
-
-#### Overriding The Defaults
-
-When collecting a payment, you can override the default `split_type` and `split_value` you set when creating the subaccount, by specifying these fields in the subaccounts item.
-
-```typescript
-  subaccounts: [
-    {
-      id: '80a510ea-7497-4499-8b49-ac13a3ab7d07',
-      split_type: SplitType.FLAT,
-      split_value: 25
-    },
-  ],
-```
-
-### All Transaction
-
-This section describes how to get all transactions. `getTransactions` method of `Chapa` instance returns all the Transaction information. The method does not accept any options.
-
-```typescript
-const response = await chapa.getTransactions();
-```
-
-#### GetTransactionsResponse
-
-```typescript
-interface Customer {
-  id: number;
-  email: string;
-  first_name: string;
-  last_name: string;
-  mobile: string;
-}
-
-interface Transaction {
-  status: string;
-  ref_id: string;
-  type: string;
-  created_at: Date;
-  currency: string;
-  amount: string;
-  charge: string;
-  trans_id: string;
-  payment_method: string;
-  customer: Customer;
-}
-
-interface Pagination {
-  per_page: number;
-  current_page: number;
-  first_page_url: string;
-  next_page_url: string;
-  prev_page_url: string;
-}
-
-interface GetTransactionsResponse {
-  message: string;
-  status: string;
-  data: {
-    transactions: Transaction[];
-    pagination: Pagination;
-  };
-}
-```
-
-### Transaction Logs
-
-This section describes how to get timeline for a transaction. A transaction timeline is a list of events that happened to a selected transaction. To get list of timeline, simply call the `getTransactionLogs` method from `Chapa` instance, and pass to it `GetTransactionLogsOptions` options.
-
-```typescript
-const response = await chapa.getTransactionLogs({
-  ref_id: 'chewatatest-6669',
-});
-```
-
-#### GetTransactionLogsOptions
-
-```typescript
-interface GetTransactionLogsOptions {
-  ref_id: string;
-}
-```
-
-#### GetTransactionLogsResponse
-
-```typescript
-interface Log {
-  item: number;
-  message: string;
-  type: string;
-  created_at: string;
-  updated_at: string;
-}
-
-interface GetTransactionLogsResponse {
-  message: string;
-  status: string;
-  data: Log[];
-}
-```
-
-### Transfer
-
-This section describes how to send funds to Bank accounts. To initiate a transfer, simply call the `transfer` method from `Chapa` instance, and pass to it `TransferOptions` options.
+<details>
+<summary><b>Transfer Funds</b></summary>
 
 ```typescript
 const response = await chapa.transfer({
   account_name: 'John Doe',
-  account_number: '32423423',
-  amount: '1',
+  account_number: '1234567890',
+  amount: '1000',
   currency: 'ETB',
-  reference: '3241342142sfdd',
-  bank_code: 656,
+  reference: 'REF-123',
+  bank_code: 128,
 });
 ```
 
-#### TransferOptions
+</details>
 
-```typescript
-interface TransferOptions {
-  account_name: string;
-  account_number: string;
-  amount: string;
-  currency: string;
-  reference: string;
-  bank_code: number;
-}
-```
-
-#### TransferResponse
-
-```typescript
-interface TransferResponse {
-  message: string;
-  status: string;
-  data: string;
-}
-```
-
-### Bulk Transfer
-
-This section describes how to send funds to Bank accounts in bulk. To do this, you'll provide an array of objects called e bulk_data. Each item in this array contains details for one transfer—the same details you specify when making a single transfer. To initiate a transfer, simply call the `bulkTransfer` method from `Chapa` instance, and pass to it `BulkTransferOptions` options.
+<details>
+<summary><b>Bulk Transfer</b></summary>
 
 ```typescript
 const response = await chapa.bulkTransfer({
-  title: 'This Month Salary!',
+  title: 'Monthly Payroll',
   currency: 'ETB',
   bulk_data: [
     {
-      account_name: 'John Doe',
-      account_number: '09xxxxxxxx',
-      amount: 1,
-      reference: 'b1111124',
+      account_name: 'Employee 1',
+      account_number: '1234567890',
+      amount: '5000',
+      reference: 'PAYROLL-001',
       bank_code: 128,
     },
+    // ... more transfers
+  ],
+});
+```
+
+</details>
+
+### Subaccounts & Split Payments
+
+<details>
+<summary><b>Create Subaccount</b></summary>
+
+```typescript
+import { SplitType } from 'chapa-nodejs';
+
+const response = await chapa.createSubaccount({
+  business_name: 'My Business',
+  account_name: 'John Doe',
+  bank_code: 128,
+  account_number: '1234567890',
+  split_type: SplitType.PERCENTAGE,
+  split_value: 0.05, // 5%
+});
+```
+
+</details>
+
+<details>
+<summary><b>Split Payment</b></summary>
+
+```typescript
+const response = await chapa.initialize({
+  // ... other payment details
+  subaccounts: [
     {
-      account_name: 'John Doe',
-      account_number: '09xxxxxxxx',
-      amount: 1,
-      reference: 'b2222e5r',
-      bank_code: 128,
+      id: 'subaccount-id',
+      split_type: SplitType.FLAT,
+      split_value: 100,
     },
   ],
 });
 ```
 
-#### BulkTransferOptions
-
-```typescript
-interface BulkData {
-  account_name: string;
-  account_number: string;
-  amount: string;
-  reference: string;
-  bank_code: number;
-}
-
-interface BulkTransferOptions {
-  title: string;
-  currency: string;
-  bulk_data: BulkData[];
-}
-```
-
-#### BulkTransferResponse
-
-```typescript
-interface BulkTransferResponse {
-  message: string;
-  status: string;
-  data: {
-    id: number;
-    created_at: string;
-  };
-}
-```
-
-### Verify Transfer
-
-To verify transfer, simply call the `verifyTransfer` method from `Chapa` instance, and pass to it `VerifyTransferOptions` options.
-
-```typescript
-const response = await chapa.verifyTransfer({
-  tx_ref: 'TX-JHBUVLM7HYMSWDA',
-});
-```
-
-#### VerifyTransferOptions
-
-```typescript
-interface VerifyTransferOptions {
-  tx_ref: string;
-}
-```
-
-#### VerifyTransferResponse
-
-```typescript
-interface Data {
-  account_name: string;
-  account_number: string;
-  mobile: string;
-  currency: string;
-  amount: number;
-  charge: number;
-  mode: string;
-  transfer_method: string;
-  narration: string;
-  chapa_transfer_id: string;
-  bank_code: number;
-  bank_name: string;
-  cross_party_reference: string;
-  ip_address: string;
-  status: string;
-  tx_ref: string;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface VerifyTransferResponse {
-  message: string;
-  status: string;
-  data: Data;
-}
-```
-
-### All Transfer
-
-This section describes how to get all transfers. `getTransfers` method of `Chapa` instance returns all the transfer information. The method does not accept any options.
-
-```typescript
-const response = await chapa.getTransfers();
-```
-
-#### GetTransfersResponse
-
-```typescript
-interface Meta {
-  current_page: number;
-  first_page_url: string;
-  last_page: number;
-  last_page_url: string;
-  next_page_url: string;
-  path: string;
-  per_page: number;
-  prev_page_url: null;
-  to: number;
-  total: number;
-  error: any[];
-}
-
-interface Transfer {
-  account_name: string;
-  account_number: string;
-  currency: string;
-  amount: number;
-  charge: number;
-  transfer_type: string;
-  chapa_reference: string;
-  bank_code: number;
-  bank_name: string;
-  bank_reference: string;
-  status: string;
-  reference: string;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface GetTransfersResponse {
-  message: string;
-  status: string;
-  data: Transfer[];
-  meta: Meta;
-}
-```
+</details>
 
 ### Direct Charge
 
-This section describes how to integrate direct charges. To initiate a direct charge, simply call the `directCharge` method from `Chapa` instance, and pass to it `DirectChargeOptions` options.
+<details>
+<summary><b>Initiate Direct Charge</b></summary>
 
 ```typescript
 const response = await chapa.directCharge({
-  first_name: 'Fireayehu',
-  last_name: 'Zekarias'
-  email:"test@gmail.com",
-  mobile: '09xxxxxxxx',
+  mobile: '0911234567',
   currency: 'ETB',
-  amount: '1',
-  tx_ref: '3241342142sfdd',
+  amount: '100',
+  tx_ref: await chapa.genTxRef(),
   type: 'telebirr',
 });
 ```
 
-#### DirectChargeOptions
+</details>
 
-```typescript
-type DirectChargeType =
-  | 'telebirr'
-  | 'mpesa'
-  | 'Amole'
-  | 'CBEBirr'
-  | 'Coopay-Ebirr'
-  | 'AwashBirr'
-  | string;
+### Refunds
 
-interface DirectChargeOptions {
-  first_name?: string;
-  last_name?: string;
-  email?: string;
-  mobile: string;
-  currency: string;
-  amount: string;
-  tx_ref: string;
-  type: DirectChargeType;
-}
-```
-
-#### DirectChargeResponse
-
-```typescript
-interface Meta {
-  message: string;
-  ref_id: string;
-  verification_type: string;
-  status: string;
-  data: string;
-  payment_status: string;
-}
-
-interface DirectChargeResponse {
-  message: string;
-  status: string;
-  data: {
-    auth_type: string;
-    meta: Meta;
-  };
-}
-```
-
-### Authorize Direct Charge
-
-This section describes the necessary actions taken to authorize transactions after payment using direct charge. To authorize direct charge, simply call the `authorizeDirectCharge` method from `Chapa` instance, and pass to it `AuthorizeDirectChargeOptions` options.
-
-```typescript
-const response = await chapa.authorizeDirectCharge({
-  reference: 'CHcuKjgnN0Dk0',
-  client: '',
-  type: 'telebirr',
-});
-```
-
-#### AuthorizeDirectChargeOptions
-
-```typescript
-type DirectChargeType =
-  | 'telebirr'
-  | 'mpesa'
-  | 'Amole'
-  | 'CBEBirr'
-  | 'Coopay-Ebirr'
-  | 'AwashBirr'
-  | string;
-
-interface AuthorizeDirectChargeOptions {
-  reference: string;
-  client: string;
-  type: DirectChargeType;
-}
-```
-
-#### AuthorizeDirectChargeResponse
-
-```typescript
-export interface AuthorizeDirectChargeResponse {
-  message: string;
-  trx_ref: string;
-  processor_id: string;
-}
-```
-
-### Refund
-
-This section describes how to process refunds for transactions. To initiate a refund, simply call the `refund` method from `Chapa` instance, and pass to it `RefundOptions` options.
+<details>
+<summary><b>Process Refund</b></summary>
 
 ```typescript
 const response = await chapa.refund({
-  tx_ref: 'TX-JHBUVLM7HYMSWDA',
-  reason: 'accidental purchase',
-  amount: '1000',
-  meta: {
-    customer_id: '123',
-    reference: 'REF123',
-  },
+  tx_ref: 'TX-XXXXXXXXXXXXX',
+  reason: 'Customer request',
+  amount: '1000', // Optional: partial refund
 });
 ```
 
-#### RefundOptions
+</details>
+
+### Utility Functions
+
+<details>
+<summary><b>Generate Transaction Reference</b></summary>
 
 ```typescript
-interface RefundOptions {
-  tx_ref: string;
-  reason?: string;
-  amount?: string;
-  meta?: {
-    customer_id?: string;
-    reference?: string;
-    [key: string]: any;
-  };
+// Default: TX-XXXXXXXXXXXXXXX
+const ref1 = chapa.genTxRef();
+
+// Custom prefix
+const ref2 = chapa.genTxRef({ prefix: 'ORDER' });
+
+// No prefix
+const ref3 = chapa.genTxRef({ removePrefix: true });
+
+// Custom size
+const ref4 = chapa.genTxRef({ size: 20 });
+```
+
+</details>
+
+## Error Handling
+
+```typescript
+import { HttpException } from 'chapa-nodejs';
+
+try {
+  const response = await chapa.initialize({...});
+} catch (error) {
+  if (error instanceof HttpException) {
+    console.error(`Error ${error.status}: ${error.message}`);
+  }
 }
 ```
 
-#### RefundResponse
+## TypeScript Support
+
+Full TypeScript support with comprehensive type definitions:
 
 ```typescript
-interface RefundResponse {
-  message: string;
-  status: string;
-  data: any;
-}
+import {
+  Chapa,
+  InitializeOptions,
+  InitializeResponse,
+  VerifyResponse,
+  SplitType,
+} from 'chapa-nodejs';
 ```
 
-## Stay in touch
+## Requirements
 
-- Author - Fireayehu Zekarias
-- Github - [https://github.com/fireayehu](https://github.com/fireayehu)
-- Twitter - [https://twitter.com/Fireayehu](https://twitter.com/Fireayehu)
-- LinkedIn - [https://www.linkedin.com/in/fireayehu/](https://www.linkedin.com/in/fireayehu/)
+- Node.js >= 18.0.0
+- TypeScript >= 5.0 (for TypeScript projects)
+
+## Contributing
+
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+
+### Contributors
+
+<a href="https://github.com/fireayehu/chapa-nodejs/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=fireayehu/chapa-nodejs" />
+</a>
+
+### How to Contribute
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'feat: add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## Project Stats
+
+<p align="center">
+  <img src="https://repobeats.axiom.co/api/embed/YOUR_REPO_ID.svg" alt="Repobeats analytics" />
+</p>
+
+<details>
+<summary><b>Detailed Statistics</b></summary>
+
+![Alt](https://repobeats.axiom.co/api/embed/YOUR_REPO_ID.svg 'Repobeats analytics image')
+
+### Activity Graph
+
+[![Activity Graph](https://github-readme-activity-graph.vercel.app/graph?username=fireayehu&repo=chapa-nodejs&theme=github-compact)](https://github.com/fireayehu/chapa-nodejs/graphs/contributors)
+
+### Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=fireayehu/chapa-nodejs&type=Date)](https://star-history.com/#fireayehu/chapa-nodejs&Date)
+
+</details>
+
+## Testing
+
+```bash
+# Run tests
+pnpm test
+
+# Run tests with coverage
+pnpm test:coverage
+
+# Run tests in watch mode
+pnpm test:watch
+```
+
+## Security
+
+Please see our [Security Policy](SECURITY.md) for reporting vulnerabilities.
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for release history.
 
 ## License
 
-chapa-nodejs is [MIT licensed](LICENSE).
+[MIT](LICENSE) © [Fireayehu Zekarias](https://github.com/fireayehu)
+
+## Links
+
+- [Chapa Official Website](https://chapa.co/)
+- [Chapa API Documentation](https://developer.chapa.co/docs)
+- [GitHub Repository](https://github.com/fireayehu/chapa-nodejs)
+- [NPM Package](https://www.npmjs.com/package/chapa-nodejs)
+- [Issue Tracker](https://github.com/fireayehu/chapa-nodejs/issues)
+
+## Support
+
+- Email: fireayehuzekarias@gmail.com
+- [Report a Bug](https://github.com/fireayehu/chapa-nodejs/issues/new?template=bug_report.yml)
+- [Request a Feature](https://github.com/fireayehu/chapa-nodejs/issues/new?template=feature_request.yml)
+- [Ask a Question](https://github.com/fireayehu/chapa-nodejs/issues/new?template=question.yml)
+
+---
+
+<p align="center">Made with ❤️ by <a href="https://github.com/fireayehu">Fireayehu Zekarias</a></p>

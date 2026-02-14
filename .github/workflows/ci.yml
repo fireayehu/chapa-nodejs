@@ -1,16 +1,17 @@
-name: Publish to npm
+name: CI
 
 on:
-  release:
-    types: [published]
-  workflow_dispatch:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
 
 jobs:
-  publish:
+  test:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x, 22.x]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -20,11 +21,10 @@ jobs:
         with:
           version: 10
 
-      - name: Setup Node.js
+      - name: Setup Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          registry-url: 'https://registry.npmjs.org'
+          node-version: ${{ matrix.node-version }}
           cache: 'pnpm'
 
       - name: Install dependencies
@@ -42,5 +42,10 @@ jobs:
       - name: Build
         run: pnpm run build
 
-      - name: Publish to npm
-        run: pnpm publish --provenance --access public --no-git-checks
+      - name: Upload coverage
+        if: matrix.node-version == '20.x'
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./coverage/lcov.info
+          flags: unittests
+          name: codecov-umbrella
